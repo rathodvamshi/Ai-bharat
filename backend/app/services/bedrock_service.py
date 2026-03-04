@@ -3,14 +3,13 @@ from ..config import AWS_REGION, KNOWLEDGE_BASE_ID
 
 def ask_didi_bedrock(user_query: str) -> str:
     """
-    Sends the user's question to the Amazon Bedrock Knowledge Base using Amazon Nova Pro.
+    Sends the user's question to the Amazon Bedrock Knowledge Base.
     Returns the clean text answer.
     """
-    # Connect to the Bedrock Agent Runtime
     client = boto3.client('bedrock-agent-runtime', region_name=AWS_REGION)
     
-    # The exact ARN for Amazon Nova Pro
-    model_arn = "arn:aws:bedrock:ap-south-1::foundation-model/amazon.nova-pro-v1:0"
+    # We are in us-east-1 now, so we can use the direct standard ID!
+    model_id = "amazon.nova-pro-v1:0"
 
     try:
         response = client.retrieve_and_generate(
@@ -21,15 +20,16 @@ def ask_didi_bedrock(user_query: str) -> str:
                 'type': 'KNOWLEDGE_BASE',
                 'knowledgeBaseConfiguration': {
                     'knowledgeBaseId': KNOWLEDGE_BASE_ID,
-                    'modelArn': model_arn
+                    # Dynamically building the correct ARN for us-east-1
+                    'modelArn': f"arn:aws:bedrock:{AWS_REGION}::foundation-model/{model_id}"
                 }
             }
         )
         
-        # Extract and return the final clean answer
         final_answer = response['output']['text']
         return final_answer
 
     except Exception as e:
         print(f"Bedrock Error: {e}")
-        return "SYSTEM_ERROR_PLEASE_TRY_AGAIN"
+        # Raising the error so it prints exactly what went wrong in the terminal, just in case
+        raise e
