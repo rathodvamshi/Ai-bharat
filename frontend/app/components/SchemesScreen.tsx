@@ -59,19 +59,19 @@ const CATEGORIES = [
 // Arrow icon for apply button
 const ArrowRightIcon = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="5" y1="12" x2="19" y2="12"/>
-        <polyline points="12 5 19 12 12 19"/>
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
     </svg>
 );
 
-function SchemeCard({ 
-    scheme, 
-    lang, 
+function SchemeCard({
+    scheme,
+    lang,
     index,
-    onApply 
-}: { 
-    scheme: typeof SCHEMES[0]; 
-    lang: Language; 
+    onApply
+}: {
+    scheme: typeof SCHEMES[0];
+    lang: Language;
     index: number;
     onApply: (scheme: SchemeContext) => void;
 }) {
@@ -110,12 +110,12 @@ function SchemeCard({
                         style={{ background: scheme.color, color: scheme.tag }}>
                         {lang === "hi" ? scheme.benefitHi : scheme.benefit}
                     </span>
-                    <motion.button 
+                    <motion.button
                         onClick={handleApply}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all duration-200 shadow-md"
-                        style={{ 
+                        style={{
                             background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)",
                             boxShadow: "0 2px 8px rgba(30, 94, 32, 0.3)"
                         }}
@@ -159,10 +159,10 @@ export default function SchemesScreen({ lang }: { lang: Language }) {
 
             <div className="px-4 pb-4 flex flex-col gap-3">
                 {filtered.map((scheme, i) => (
-                    <SchemeCard 
-                        key={scheme.id} 
-                        scheme={scheme} 
-                        lang={lang} 
+                    <SchemeCard
+                        key={scheme.id}
+                        scheme={scheme}
+                        lang={lang}
                         index={i}
                         onApply={handleApply}
                     />

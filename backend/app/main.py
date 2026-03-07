@@ -1,3 +1,12 @@
+"""
+main.py — FastAPI application entry point for Jan-Sahayak.
+
+Key responsibilities:
+  • Receive citizen voice uploads, transcribe, run through Didi AI, return response.
+  • Persist every data update immediately to database.json via database.py.
+  • Expose admin sandbox endpoints for reviewing/approving/rejecting applications.
+"""
+
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -5,25 +14,50 @@ from pydantic import BaseModel
 from uuid import uuid4
 import os
 import time
+import logging
+import hashlib
+import secrets
 
-from .config import mock_applications_db, S3_BUCKET_NAME
-from .aws_client import synthesize_speech, users_table
-from .services.bedrock_service import ask_didi_bedrock
+from .config import S3_BUCKET_NAME, KNOWLEDGE_BASE_ID, AWS_REGION, BEDROCK_KB_MODEL_ARN
+from .aws_client import synthesize_speech, transcribe_audio
+from .services.bedrock_service import ask_didi_bedrock, retrieve_from_knowledge_base
+from .database import load_db, save_db, get_db
 from .schemas import (
-    TextRequest, ApplicationSubmission, PhoneCheck, 
-    LoginRequest, RegisterRequest, ProfileUpdate, PhoneUpdate
-)
-from passlib.context import CryptContext
-
-app = FastAPI(
-    title="Jan-Sahayak API",
-    version="2.0.0",
-    description="Voice-First Government Scheme Assistant — with Web Speech API STT"
+    CheckPhoneRequest, SignupRequest, LoginRequest,
+    UpdateProfileRequest, UpdatePhoneRequest
 )
 
-# ==========================
-# CORS & FOLDER SETUP
-# ==========================
+# ──────────────────────────────────────────────
+# Logging
+# ──────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s  %(levelname)-8s  %(name)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────
+# App bootstrap
+# ──────────────────────────────────────────────
+app = FastAPI(title="Jan-Sahayak API", version="1.0.0")
+
+# Load persistent DB on startup
+@app.on_event("startup")
+def startup_event():
+    load_db()
+    logger.info("Database loaded. Records: %d", len(get_db()))
+    if KNOWLEDGE_BASE_ID:
+        logger.info(
+            "Bedrock KB: id=%s region=%s model=%s",
+            KNOWLEDGE_BASE_ID,
+            AWS_REGION,
+            BEDROCK_KB_MODEL_ARN.split("/")[-1] if "/" in BEDROCK_KB_MODEL_ARN else "?",
+        )
+
+# ──────────────────────────────────────────────
+# CORS
+# ──────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,313 +66,307 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-os.makedirs("static", exist_ok=True)
-os.makedirs("temp_audio", exist_ok=True)
+# ──────────────────────────────────────────────
+# Static file folders
+# ──────────────────────────────────────────────
+for folder in ("static", "temp_audio"):
+    os.makedirs(folder, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_user_by_phone(phone: str):
-    response = users_table.query(
-        IndexName='PhoneIndex',
-        KeyConditionExpression="phone = :p",
-        ExpressionAttributeValues={":p": phone}
-    )
-    items = response.get('Items', [])
-    return items[0] if items else None
-
-# ==========================
-# IN-MEMORY SESSION STORE
-# ==========================
-user_sessions = {}
 
 
-# ==========================
-# HEALTH CHECK
-# ==========================
-@app.get("/api/v1/health")
-def health_check():
-    return {
-        "status": "ok",
-        "services": {
-            "bedrock": "connected",
-            "polly": "connected",
-            "transcribe": "NOT_SUBSCRIBED — using Web Speech API instead",
-            "s3": "connected"
+# ══════════════════════════════════════════════
+# GREETING ENDPOINT (called on page load)
+# ══════════════════════════════════════════════
+GREET_TEXT = (
+    "Namaste! I am Didi — your government scheme assistant. "
+    "I help you check eligibility and apply for government schemes like "
+    "PM-Kisan, Ayushman Bharat, Pradhan Mantri Awas, and more. "
+    "Would you like to know about schemes, apply for a scheme, or check application status?"
+)
+
+@app.get("/api/v1/test-knowledge-base")
+def test_knowledge_base(query: str = "What are the requirements for PM-Kisan scheme?"):
+    """
+    Direct test of Bedrock Knowledge Base (jansahayak-kb).
+    Use this to verify RAG connection: GET /api/v1/test-knowledge-base?query=PM+Kisan
+    """
+    if not KNOWLEDGE_BASE_ID:
+        return {
+            "status": "error",
+            "message": "KNOWLEDGE_BASE_ID not configured in .env",
+            "config": {"AWS_REGION": AWS_REGION},
         }
+    try:
+        result = retrieve_from_knowledge_base(query)
+        if result:
+            return {
+                "status": "success",
+                "query": query,
+                "answer": result.get("answer", ""),
+                "citations_count": len(result.get("citations", [])),
+                "config": {
+                    "knowledge_base_id": KNOWLEDGE_BASE_ID,
+                    "region": AWS_REGION,
+                    "model": BEDROCK_KB_MODEL_ARN.split("/")[-1] if "/" in BEDROCK_KB_MODEL_ARN else "unknown",
+                },
+            }
+        return {
+            "status": "empty",
+            "message": "Knowledge base returned no answer (check logs for errors)",
+            "query": query,
+            "config": {"knowledge_base_id": KNOWLEDGE_BASE_ID, "region": AWS_REGION},
+        }
+    except Exception as exc:
+        logger.exception("test-knowledge-base error: %s", exc)
+        return {
+            "status": "error",
+            "message": str(exc),
+            "query": query,
+            "config": {"knowledge_base_id": KNOWLEDGE_BASE_ID, "region": AWS_REGION},
+        }
+
+
+@app.get("/api/v1/greet")
+def greet():
+    """
+    Returns Didi's welcome audio. Called once when the frontend loads.
+    No auth required — this is purely a TTS call to play the opening prompt.
+    """
+    try:
+        mp3_bytes = synthesize_speech(GREET_TEXT)
+        filename = f"greet_{uuid4().hex[:8]}.mp3"
+        with open(f"static/{filename}", "wb") as f:
+            f.write(mp3_bytes)
+        return {"speech": GREET_TEXT, "audio_url": f"/static/{filename}"}
+    except Exception as exc:
+        logger.error("Greet TTS error: %s", exc)
+        return {"speech": GREET_TEXT, "audio_url": None}
+
+
+# ══════════════════════════════════════════════
+# CITIZEN VOICE ENDPOINT
+# ══════════════════════════════════════════════
+@app.post("/api/v1/process-voice")
+async def process_voice(
+    audio_file: UploadFile = File(...),
+    user_id: str = Form(...),          # Browser session/device fingerprint (not the real user ID)
+    language: str = Form("hi-IN"),
+):
+    """
+    Full pipeline:
+      audio → Groq Whisper → Bedrock Didi → Polly TTS → JSON response
+    """
+    temp_path = f"temp_audio/{uuid4().hex}_{audio_file.filename}"
+    try:
+        # ── 1. Save upload ──────────────────────
+        with open(temp_path, "wb") as buf:
+            buf.write(await audio_file.read())
+
+        # ── 2. Transcribe ───────────────────────
+        try:
+            citizen_text = transcribe_audio(temp_path)
+            logger.info("Transcription: %r", citizen_text)
+            if not citizen_text or len(citizen_text.strip()) < 2:
+                raise ValueError("Empty transcription")
+        except Exception as exc:
+            logger.warning("Transcription failed: %s", exc)
+            return _error_response("मुझे ठीक से सुनाई नहीं दिया। कृपया फिर से बोलें।")
+
+        # ── 3. Didi AI (state machine + Bedrock) ─
+        device_id = user_id.strip()
+        bedrock_result = ask_didi_bedrock(citizen_text, device_id)
+
+        ai_data          = bedrock_result["ai_data"]
+        composite_id     = bedrock_result["composite_user_id"]
+        show_form        = bedrock_result.get("show_form", False)
+        speech_text      = ai_data.get("speech_response", "")
+        extracted_info   = ai_data.get("extracted_data", {})
+        is_ready         = ai_data.get("is_ready_to_submit", False)
+
+        logger.info("Composite ID: %s | Extracted: %s", composite_id, extracted_info)
+
+        # ── 4. Persist to database ──────────────
+        db = get_db()
+        active_form_data = {}
+        application_status = "Authenticating..."
+
+        if composite_id:
+            if composite_id not in db:
+                db[composite_id] = {
+                    "id": f"APP-{uuid4().hex[:6].upper()}",
+                    "user_id": composite_id,
+                    "status": "In Progress",
+                    "created_at": time.time(),
+                    "updated_at": time.time(),
+                    "form_data": {},
+                }
+
+            record = db[composite_id]
+
+            if extracted_info:
+                # .update() naturally OVERWRITES — this is Phase 4's correction fix
+                record["form_data"].update(extracted_info)
+                record["updated_at"] = time.time()
+
+            if is_ready:
+                record["status"] = "Submitted"
+                logger.info("✅ Form submitted for %s", composite_id)
+
+            # Persist to disk immediately after every mutation
+            save_db()
+
+            active_form_data   = record["form_data"]
+            application_status = record["status"]
+
+        # ── 5. Text-to-Speech ───────────────────
+        audio_url = None
+        try:
+            mp3_bytes      = synthesize_speech(speech_text)
+            audio_filename = f"response_{uuid4().hex[:8]}.mp3"
+            with open(f"static/{audio_filename}", "wb") as f:
+                f.write(mp3_bytes)
+            audio_url = f"/static/{audio_filename}"
+        except Exception as exc:
+            logger.error("Polly TTS error: %s", exc)
+
+        return {
+            "status": "success",
+            "ai_response": speech_text,
+            "audio_url": audio_url,
+            "extracted_data": active_form_data,
+            "application_status": application_status,
+            "show_form": show_form,
+        }
+
+    finally:
+        # Always clean up temp file
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+
+def _error_response(message: str) -> dict:
+    return {
+        "status": "error",
+        "ai_response": message,
+        "audio_url": None,
+        "extracted_data": {},
+        "application_status": "Error",
     }
 
 
-# ==========================
-# PRIMARY ENDPOINT: TEXT INPUT FROM BROWSER STT
-# This is called AFTER the browser does Speech-to-Text via Web Speech API
-# ==========================
-class TextRequest(BaseModel):
+# ══════════════════════════════════════════════
+# TEXT CHAT ENDPOINT (for typing / voice → text flow)
+# ══════════════════════════════════════════════
+class ProcessTextRequest(BaseModel):
     text: str
-    user_id: str = "9876543210"
+    user_id: str = "anonymous"
     language: str = "hi-IN"
 
 
 @app.post("/api/v1/process-text")
-async def process_text(req: TextRequest):
+async def process_text(payload: ProcessTextRequest):
     """
-    Receives text (already transcribed by browser Web Speech API).
-    Runs it through Bedrock Knowledge Base (Didi AI) + Polly TTS.
-    Returns: AI speech text + audio URL + extracted form data.
+    Process typed or transcribed text through Didi (Bedrock + RAG).
+    Same logic as process-voice but without audio upload.
+    Returns ai_response, extracted_data, application_status, and optional audio_url.
     """
-    citizen_question = req.text.strip()
-    if not citizen_question:
-        raise HTTPException(status_code=400, detail="Text input cannot be empty")
-
-    print(f"\n--- NEW TEXT REQUEST ---")
-    print(f"User [{req.user_id}] says: {citizen_question}")
-    print(f"Language: {req.language}")
-
-    # Step 1: Send to Bedrock (Didi AI State Machine via Knowledge Base)
-    current_session_id = user_sessions.get(req.user_id)
-    try:
-        bedrock_result = ask_didi_bedrock(citizen_question, current_session_id)
-    except Exception as e:
-        print(f"Bedrock call failed: {e}")
-        raise HTTPException(status_code=502, detail=f"AI service error: {str(e)}")
-
-    ai_data = bedrock_result["ai_data"]
-    new_session_id = bedrock_result["session_id"]
-    user_sessions[req.user_id] = new_session_id
-
-    speech_text = ai_data.get("speech_response", "Mujhe samajhne mein thodi dikkat ho rahi hai. Kripya phir se bolein.")
-    extracted_info = ai_data.get("extracted_data", {})
-    is_ready_to_submit = ai_data.get("is_ready_to_submit", False)
-    current_state = ai_data.get("current_state", "Explore")
-
-    print(f"Didi State: {current_state}")
-    print(f"Didi says: {speech_text}")
-    print(f"Extracted: {extracted_info}")
-    print(f"Ready to Submit: {is_ready_to_submit}")
-
-    # Step 2: Update mock DB
-    if req.user_id not in mock_applications_db:
-        mock_applications_db[req.user_id] = {
-            "id": f"APP-{uuid4().hex[:6].upper()}",
-            "user_id": req.user_id,
-            "status": "In Progress",
-            "timestamp": time.time(),
-            "form_data": {}
+    text = (payload.text or "").strip()
+    if not text or len(text) < 1:
+        return {
+            "status": "error",
+            "ai_response": "Please enter a message.",
+            "extracted_data": {},
+            "application_status": "Error",
+            "audio_url": None,
         }
 
-    # Merge only non-null extracted values
-    if extracted_info:
-        for k, v in extracted_info.items():
-            if v is not None and str(v).strip() not in ("", "null", "None"):
-                mock_applications_db[req.user_id]["form_data"][k] = v
-
-    if is_ready_to_submit:
-        mock_applications_db[req.user_id]["status"] = "Submitted"
-        print(f"✅ Application submitted for user {req.user_id}")
-
-    # Step 3: AWS Polly TTS
-    audio_url = None
+    device_id = (payload.user_id or "anonymous").strip() or "anonymous"
     try:
-        # Choose Polly voice based on language
-        voice_map = {
-            "hi-IN": "Aditi",   # Hindi female
-            "te-IN": "Aditi",   # Telugu (Aditi supports hi/te via neural)
-            "en-IN": "Aditi",
-            "en-US": "Joanna",
-        }
-        voice_id = voice_map.get(req.language, "Aditi")
+        bedrock_result = ask_didi_bedrock(text, device_id)
+        ai_data = bedrock_result["ai_data"]
+        composite_id = bedrock_result["composite_user_id"]
+        show_form = bedrock_result.get("show_form", False)
+        speech_text = ai_data.get("speech_response", "")
+        extracted_info = ai_data.get("extracted_data", {})
+        is_ready = ai_data.get("is_ready_to_submit", False)
 
-        mp3_audio_bytes = synthesize_speech(speech_text, voice_id=voice_id)
-        audio_filename = f"response_{req.user_id}_{uuid4().hex[:6]}.mp3"
-        audio_path = f"static/{audio_filename}"
-        with open(audio_path, "wb") as f:
-            f.write(mp3_audio_bytes)
-        audio_url = f"/static/{audio_filename}"
-        print(f"Polly audio saved: {audio_filename} ({len(mp3_audio_bytes)} bytes)")
-    except Exception as e:
-        print(f"⚠️ Polly TTS Error: {e}")
-        audio_url = None  # Graceful degradation — text still shown
+        logger.info("[process-text] device=%s extracted=%s", device_id, extracted_info)
 
-    return {
-        "status": "success",
-        "ai_response": speech_text,
-        "audio_url": audio_url,
-        "extracted_data": mock_applications_db[req.user_id]["form_data"],
-        "application_status": mock_applications_db[req.user_id]["status"],
-        "current_state": current_state,
-        "is_ready_to_submit": is_ready_to_submit,
-        "transcribed_text": citizen_question,  # Echo back what was understood
-    }
+        db = get_db()
+        active_form_data = {}
+        application_status = "In Progress"
 
+        if composite_id:
+            if composite_id not in db:
+                db[composite_id] = {
+                    "id": f"APP-{uuid4().hex[:6].upper()}",
+                    "user_id": composite_id,
+                    "status": "In Progress",
+                    "created_at": time.time(),
+                    "updated_at": time.time(),
+                    "form_data": {},
+                }
+            record = db[composite_id]
+            if extracted_info:
+                record["form_data"].update(extracted_info)
+                record["updated_at"] = time.time()
+            if is_ready:
+                record["status"] = "Submitted"
+                logger.info("✅ Form submitted via process-text: %s", composite_id)
+            save_db()
+            active_form_data = record["form_data"]
+            application_status = record["status"]
 
-# ==========================
-# LEGACY ENDPOINT: Audio file upload (kept for compatibility)
-# Now also accepts transcribed_text form field for Web Speech API flow
-# ==========================
-@app.post("/api/v1/process-voice")
-async def process_voice(
-    audio_file: UploadFile = File(None),
-    transcribed_text: str = Form(None),
-    user_id: str = Form("9876543210"),
-    language: str = Form("hi-IN")
-):
-    """
-    Legacy voice endpoint. Now accepts transcribed_text from browser Web Speech API.
-    Falls back to a helpful error if no text and no transcribe subscription.
-    """
-    # If browser already transcribed the speech
-    if transcribed_text and transcribed_text.strip():
-        citizen_question = transcribed_text.strip()
-        print(f"\n--- VOICE ENDPOINT (with transcribed text) ---")
-        print(f"User [{user_id}]: {citizen_question}")
-    else:
-        # Old bypass: no real transcription available
-        print(f"\n--- VOICE ENDPOINT (no transcription — Web Speech API not used) ---")
-        citizen_question = "मुझे PM SVANidhi के बारे में बताएं"  # Default fallback
-        print(f"Using default question: {citizen_question}")
-
-    # Save audio file if provided (for logging/replay purposes)
-    if audio_file and audio_file.filename:
-        temp_path = f"temp_audio/{uuid4().hex}_{audio_file.filename}"
+        audio_url = None
         try:
-            content = await audio_file.read()
-            with open(temp_path, "wb") as buffer:
-                buffer.write(content)
-            print(f"Audio saved to {temp_path} ({len(content)} bytes)")
-        except Exception:
-            pass
+            mp3_bytes = synthesize_speech(speech_text)
+            audio_filename = f"response_{uuid4().hex[:8]}.mp3"
+            with open(f"static/{audio_filename}", "wb") as f:
+                f.write(mp3_bytes)
+            audio_url = f"/static/{audio_filename}"
+        except Exception as exc:
+            logger.warning("Polly TTS in process-text: %s", exc)
 
-    # Delegate to the text processing logic
-    req = TextRequest(text=citizen_question, user_id=user_id, language=language)
-    return await process_text(req)
+        return {
+            "status": "success",
+            "ai_response": speech_text,
+            "extracted_data": active_form_data,
+            "application_status": application_status,
+            "audio_url": audio_url,
+            "transcribed_text": text,
+            "show_form": show_form,
+        }
+    except Exception as exc:
+        logger.exception("process-text error: %s", exc)
+        return {
+            "status": "error",
+            "ai_response": "मुझे समस्या आई। कृपया फिर से कोशिश करें। (Something went wrong — please try again.)",
+            "extracted_data": {},
+            "application_status": "Error",
+            "audio_url": None,
+        }
 
 
-# ==========================
-# ADMIN ROUTES — Dummy Gov Sandbox
-# ==========================
+# ══════════════════════════════════════════════
+# ADMIN SANDBOX ENDPOINTS
+# ══════════════════════════════════════════════
+
 @app.get("/api/v1/dummy-gov/applications")
 def get_all_applications():
-    apps = list(mock_applications_db.values())
-    return {"applications": apps, "total": len(apps)}
+    db = get_db()
+    return {"applications": list(db.values())}
 
 
 @app.put("/api/v1/dummy-gov/applications/{application_id}/approve")
 def approve_application(application_id: str):
-    for key, app_data in mock_applications_db.items():
-        if app_data.get("id") == application_id or key == application_id:
-            mock_applications_db[key]["status"] = "Approved"
-            print(f"✅ Application {application_id} APPROVED")
-            return {"status": "success", "application_id": application_id}
-    raise HTTPException(status_code=404, detail="Application Not Found")
-
-# ==========================
-# AUTHENTICATION & PROFILE
-# ==========================
-
-@app.post("/api/auth/check-user")
-async def check_user(req: PhoneCheck):
-    user = get_user_by_phone(req.phone)
-    return {"exists": user is not None}
-
-@app.post("/api/auth/login")
-async def login(req: LoginRequest):
-    user = get_user_by_phone(req.phone)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    if not verify_password(req.password, user['password_hash']):
-        raise HTTPException(status_code=401, detail="Invalid password")
-    
-    return {
-        "success": True,
-        "token": f"dummy_jwt_{uuid4().hex}",
-        "user_id": user['user_id'],
-        "phone": user['phone'],
-        "name": user.get('name')
-    }
-
-@app.post("/api/auth/signup")
-async def signup(req: RegisterRequest):
-    # Check if number exists
-    if get_user_by_phone(req.phone):
-        raise HTTPException(status_code=400, detail="Phone number already registered")
-    
-    user_id = str(uuid4())
-    user_data = {
-        "user_id": user_id,
-        "phone": req.phone,
-        "password_hash": get_password_hash(req.password),
-        "name": req.name,
-        "created_at": int(time.time()),
-        "village": "",
-        "district": "",
-        "land": "",
-        "profile_image": ""
-    }
-    
-    users_table.put_item(Item=user_data)
-    return {"success": True, "user_id": user_id}
-
-@app.get("/api/v1/user/profile/{user_id}")
-async def get_profile(user_id: str):
-    response = users_table.get_item(Key={'user_id': user_id})
-    user = response.get('Item')
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Don't return password hash
-    del user['password_hash']
-    return user
-
-@app.put("/api/v1/user/profile/{user_id}")
-async def update_profile(user_id: str, req: ProfileUpdate):
-    # Construct update expression
-    update_expression = "SET "
-    expression_attribute_values = {}
-    
-    updates = req.model_dump(exclude_unset=True)
-    if not updates:
-        return {"status": "no updates"}
-    
-    for i, (key, value) in enumerate(updates.items()):
-        update_expression += f"{key} = :v{i}, "
-        expression_attribute_values[f":v{i}"] = value
-    
-    update_expression = update_expression.rstrip(", ")
-    
-    users_table.update_item(
-        Key={'user_id': user_id},
-        UpdateExpression=update_expression,
-        ExpressionAttributeValues=expression_attribute_values
-    )
-    return {"status": "success"}
-
-@app.post("/api/v1/user/update-phone/{user_id}")
-async def update_phone(user_id: str, req: PhoneUpdate):
-    response = users_table.get_item(Key={'user_id': user_id})
-    user = response.get('Item')
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    if not verify_password(req.current_password, user['password_hash']):
-        raise HTTPException(status_code=401, detail="Invalid password")
-    
-    # Check if NEW phone is already taken
-    if get_user_by_phone(req.new_phone):
-        raise HTTPException(status_code=400, detail="New phone number already in use")
-    
-    users_table.update_item(
-        Key={'user_id': user_id},
-        UpdateExpression="SET phone = :p",
-        ExpressionAttributeValues={":p": req.new_phone}
-    )
+    db = get_db()
+    record = _find_record(db, application_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Application not found")
+    record["status"] = "Approved"
+    save_db()
     return {"status": "success"}
 
 
@@ -348,10 +376,196 @@ class RejectPayload(BaseModel):
 
 @app.put("/api/v1/dummy-gov/applications/{application_id}/reject")
 def reject_application(application_id: str, payload: RejectPayload):
-    for key, app_data in mock_applications_db.items():
-        if app_data.get("id") == application_id or key == application_id:
-            mock_applications_db[key]["status"] = "Rejected"
-            mock_applications_db[key]["rejection_reason"] = payload.reason
-            print(f"❌ Application {application_id} REJECTED: {payload.reason}")
-            return {"status": "success", "application_id": application_id}
-    raise HTTPException(status_code=404, detail="Application Not Found")
+    db = get_db()
+    record = _find_record(db, application_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Application not found")
+    record["status"] = "Rejected"
+    record["rejection_reason"] = payload.reason
+    save_db()
+    return {"status": "success"}
+
+
+def _find_record(db: dict, application_id: str) -> dict | None:
+    """Look up by composite key OR by the APP-XXXXXX id field."""
+    if application_id in db:
+        return db[application_id]
+    for record in db.values():
+        if record.get("id") == application_id:
+            return record
+    return None
+
+
+# ══════════════════════════════════════════════
+# AUTHENTICATION ENDPOINTS
+# ══════════════════════════════════════════════
+
+def _hash_password(password: str) -> str:
+    """Simple password hashing using SHA-256."""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def _generate_token() -> str:
+    """Generate a secure random token."""
+    return secrets.token_urlsafe(32)
+
+def _get_users_db() -> dict:
+    """Get or initialize the users section of the database."""
+    db = get_db()
+    if "users" not in db:
+        db["users"] = {}
+    return db["users"]
+
+def _find_user_by_phone(phone: str) -> dict | None:
+    """Find a user by phone number."""
+    users = _get_users_db()
+    for user in users.values():
+        if user.get("phone") == phone:
+            return user
+    return None
+
+
+@app.post("/api/v1/auth/check-user")
+def check_user(payload: CheckPhoneRequest):
+    """Check if a user with the given phone number exists."""
+    user = _find_user_by_phone(payload.phone)
+    return {"exists": user is not None}
+
+
+@app.post("/api/v1/auth/signup")
+def signup(payload: SignupRequest):
+    """Register a new user."""
+    # Check if phone already exists
+    if _find_user_by_phone(payload.phone):
+        raise HTTPException(status_code=400, detail="Phone number already registered")
+    
+    users = _get_users_db()
+    user_id = f"USR-{uuid4().hex[:8].upper()}"
+    
+    new_user = {
+        "user_id": user_id,
+        "phone": payload.phone,
+        "password_hash": _hash_password(payload.password),
+        "name": payload.name,
+        "village": "",
+        "district": "",
+        "land": "",
+        "profile_image": "",
+        "created_at": time.time(),
+        "updated_at": time.time()
+    }
+    
+    users[user_id] = new_user
+    save_db()
+    
+    logger.info("New user registered: %s (%s)", user_id, payload.phone)
+    
+    return {
+        "success": True,
+        "user_id": user_id,
+        "token": _generate_token()
+    }
+
+
+@app.post("/api/v1/auth/login")
+def login(payload: LoginRequest):
+    """Authenticate a user with phone and password."""
+    user = _find_user_by_phone(payload.phone)
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid phone or password")
+    
+    if user.get("password_hash") != _hash_password(payload.password):
+        raise HTTPException(status_code=401, detail="Invalid phone or password")
+    
+    logger.info("User logged in: %s", user["user_id"])
+    
+    return {
+        "success": True,
+        "user_id": user["user_id"],
+        "phone": user["phone"],
+        "token": _generate_token()
+    }
+
+
+# ══════════════════════════════════════════════
+# USER PROFILE ENDPOINTS
+# ══════════════════════════════════════════════
+
+@app.get("/api/v1/user/profile/{user_id}")
+def get_user_profile(user_id: str):
+    """Get user profile by user_id."""
+    users = _get_users_db()
+    
+    if user_id not in users:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user = users[user_id]
+    
+    # Return profile without password_hash
+    return {
+        "user_id": user["user_id"],
+        "phone": user["phone"],
+        "name": user.get("name", ""),
+        "village": user.get("village", ""),
+        "district": user.get("district", ""),
+        "land": user.get("land", ""),
+        "profile_image": user.get("profile_image", "")
+    }
+
+
+@app.put("/api/v1/user/profile/{user_id}")
+def update_user_profile(user_id: str, payload: UpdateProfileRequest):
+    """Update user profile."""
+    users = _get_users_db()
+    
+    if user_id not in users:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user = users[user_id]
+    
+    # Update only the fields that are provided
+    if payload.name is not None:
+        user["name"] = payload.name
+    if payload.village is not None:
+        user["village"] = payload.village
+    if payload.district is not None:
+        user["district"] = payload.district
+    if payload.land is not None:
+        user["land"] = payload.land
+    if payload.profile_image is not None:
+        user["profile_image"] = payload.profile_image
+    
+    user["updated_at"] = time.time()
+    save_db()
+    
+    logger.info("Profile updated for user: %s", user_id)
+    
+    return {"success": True}
+
+
+@app.put("/api/v1/user/update-phone/{user_id}")
+def update_user_phone(user_id: str, payload: UpdatePhoneRequest):
+    """Update user's phone number (requires current password)."""
+    users = _get_users_db()
+    
+    if user_id not in users:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user = users[user_id]
+    
+    # Verify current password
+    if user.get("password_hash") != _hash_password(payload.current_password):
+        raise HTTPException(status_code=401, detail="Invalid password")
+    
+    # Check if new phone is already taken
+    existing = _find_user_by_phone(payload.new_phone)
+    if existing and existing["user_id"] != user_id:
+        raise HTTPException(status_code=400, detail="Phone number already in use")
+    
+    user["phone"] = payload.new_phone
+    user["updated_at"] = time.time()
+    save_db()
+    
+    logger.info("Phone updated for user: %s -> %s", user_id, payload.new_phone)
+    
+    return {"success": True}

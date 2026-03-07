@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, ChangeEvent } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -33,6 +33,9 @@ export default function ProfileScreen({
     const [village, setVillage] = useState(user?.village || "");
     const [district, setDistrict] = useState(user?.district || "");
     const [land, setLand] = useState(user?.land || "");
+    const [profileImage, setProfileImage] = useState(user?.profile_image || "");
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Phone Update Flow
     const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
@@ -42,15 +45,30 @@ export default function ProfileScreen({
     const [phoneError, setPhoneError] = useState("");
 
     const handleSaveProfile = async () => {
-        const success = await updateProfile({ name, village, district, land });
+        const success = await updateProfile({
+            name,
+            village,
+            district,
+            land,
+            profile_image: profileImage
+        });
         if (success) setEditMode(false);
+    };
+
+    const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfileImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handlePhoneUpdate = async () => {
         setPhoneError("");
         if (phoneStep === 1) {
-            // No direct way to verify pwd without action, so we move to step 2 
-            // and the backend will verify both at once
             setPhoneStep(2);
         } else {
             const success = await updatePhone(currentPassword, newPhone);
@@ -68,22 +86,14 @@ export default function ProfileScreen({
     if (!user) return null;
 
     return (
-        <div className="flex flex-col min-h-full bg-slate-50 relative pb-20">
-            {/* Header / Logo Section */}
-            <div className="bg-white px-6 pt-12 pb-6 flex items-center justify-between border-b border-gray-100 shadow-sm sticky top-0 z-20">
-                <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12">
-                        <Image src="/mainlogo.png" alt="logo" fill className="object-contain" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-black text-gray-900 leading-tight">Jan-Sahayak</h1>
-                        <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Digital Farmer Profile</p>
-                    </div>
-                </div>
-                <button onClick={() => setShowLangPicker(true)} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-bold text-gray-600">
-                    <Globe size={14} /> {lang === "hi" ? "भाषा" : "Lang"}
-                </button>
-            </div>
+        <div className="flex flex-col min-h-full bg-slate-50 relative pb-20 pt-6">
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+                accept="image/*"
+            />
 
             {/* Profile Hero Card */}
             <div className="px-6 -mt-0.5">
@@ -95,14 +105,17 @@ export default function ProfileScreen({
                         <div className="relative group mb-6">
                             <div className="w-28 h-28 rounded-[2rem] bg-white p-1.5 shadow-xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
                                 <div className="w-full h-full rounded-[1.7rem] bg-emerald-50 flex items-center justify-center overflow-hidden border-2 border-emerald-100">
-                                    {user.profile_image ? (
-                                        <Image src={user.profile_image} alt="profile" fill className="object-cover" />
+                                    {profileImage ? (
+                                        <Image src={profileImage} alt="profile" fill className="object-cover" />
                                     ) : (
                                         <User size={48} className="text-emerald-300" />
                                     )}
                                 </div>
                             </div>
-                            <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-white text-emerald-600 rounded-2xl flex items-center justify-center shadow-lg border border-emerald-50">
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="absolute -bottom-2 -right-2 w-10 h-10 bg-white text-emerald-600 rounded-2xl flex items-center justify-center shadow-lg border border-emerald-50 active:scale-95 transition-all"
+                            >
                                 <Camera size={18} />
                             </button>
                         </div>
@@ -122,10 +135,15 @@ export default function ProfileScreen({
                         )}
                     </div>
                 </div>
+                <div className="flex justify-end mt-4 px-2">
+                    <button onClick={() => setShowLangPicker(true)} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-100 text-xs font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50">
+                        <Globe size={14} className="text-emerald-500" /> {lang === "hi" ? "भाषा" : "Lang"}
+                    </button>
+                </div>
             </div>
 
             {/* Details Grid */}
-            <div className="px-6 mt-10 space-y-8">
+            <div className="px-6 mt-6 space-y-8">
                 <div>
                     <div className="flex items-center justify-between mb-4 px-2">
                         <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Personal Details</h3>
@@ -189,7 +207,7 @@ export default function ProfileScreen({
 
                     <button
                         onClick={logout}
-                        className="w-full bg-red-50 rounded-[2rem] p-5 border border-red-100 flex items-center gap-4 text-red-600 font-black text-sm"
+                        className="w-full bg-red-50 rounded-[2rem] p-5 border border-red-100 flex items-center gap-4 text-red-600 font-black text-sm transition-all active:scale-95"
                     >
                         <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
                             <LogOut size={24} />

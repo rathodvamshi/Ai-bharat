@@ -25,26 +25,29 @@ class ApplicationSubmission(BaseModel):
     scheme_name: str
     application_json: Dict[str, Any]
 
-# 4. Auth & User Profile Schemas
-class PhoneCheck(BaseModel):
+# ==========================
+# AUTH SCHEMAS
+# ==========================
+
+class CheckPhoneRequest(BaseModel):
     phone: str
+
+class SignupRequest(BaseModel):
+    phone: str
+    password: str
+    name: str
 
 class LoginRequest(BaseModel):
     phone: str
     password: str
 
-class RegisterRequest(BaseModel):
-    phone: str
-    password: str
-    name: Optional[str] = ""
-
-class ProfileUpdate(BaseModel):
+class UpdateProfileRequest(BaseModel):
     name: Optional[str] = None
     village: Optional[str] = None
     district: Optional[str] = None
     land: Optional[str] = None
     profile_image: Optional[str] = None
 
-class PhoneUpdate(BaseModel):
+class UpdatePhoneRequest(BaseModel):
     current_password: str
     new_phone: str

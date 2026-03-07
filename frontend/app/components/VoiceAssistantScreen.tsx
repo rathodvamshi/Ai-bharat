@@ -9,6 +9,9 @@ import {
     User,
     Bot,
     CheckCircle2,
+    Keyboard,
+    MessageSquare,
+    ClipboardList,
 } from "lucide-react";
 import { Language } from "../lib/translations";
 import { useNavigation, SchemeContext } from "../contexts/NavigationContext";
@@ -57,6 +60,9 @@ interface ConversationState {
 // ==========================================
 // CONSTANTS
 // ==========================================
+const API_BASE = typeof window !== "undefined"
+    ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000")
+    : "http://localhost:8000";
 
 const SCHEMES = [
     { id: "pmkisan", name: "PM Kisan", nameHi: "पीएम किसान", nameTe: "పీఎం కిసాన్", emoji: "🌾", keywords: ["pm-kisan", "kisan samman", "किसान सम्मान"] },
@@ -186,24 +192,55 @@ const SmallVoiceWave = () => (
     </div>
 );
 
-const VoiceWave = () => (
-    <div className="flex items-center gap-1.5 h-8">
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <motion.div
-                key={i}
-                animate={{
-                    height: [12, 32, 12],
-                    opacity: [0.6, 1, 0.6],
-                }}
-                transition={{
-                    duration: 0.8,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                    ease: "easeInOut"
-                }}
-                className="w-1.5 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-            />
-        ))}
+const VoiceWaves = ({ isListening }: { isListening: boolean }) => (
+    <div className="absolute inset-0 flex justify-center items-center pointer-events-none overflow-hidden">
+        <AnimatePresence>
+            {isListening && (
+                <div className="relative w-full h-full flex items-center justify-center">
+                    {/* Concentric Pulsing Rings */}
+                    {[1, 2, 3].map((i) => (
+                        <motion.div
+                            key={`ring-${i}`}
+                            initial={{ opacity: 0, scale: 1 }}
+                            animate={{
+                                opacity: [0, 0.4, 0],
+                                scale: [1, 2.2],
+                            }}
+                            exit={{ opacity: 0 }}
+                            transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                delay: i * 0.8,
+                                ease: "easeOut"
+                            }}
+                            className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-[2.8rem] border border-emerald-400/30 shadow-[0_0_15px_rgba(52,211,153,0.1)]"
+                        />
+                    ))}
+
+                    {/* Neat Side Arcs */}
+                    <div className="absolute flex gap-32 sm:gap-40 items-center justify-center">
+                        <motion.div
+                            animate={{
+                                x: [-5, -15, -5],
+                                opacity: [0.4, 1, 0.4],
+                                scaleY: [0.8, 1.1, 0.8]
+                            }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                            className="w-12 h-24 sm:w-16 sm:h-32 border-l-2 border-emerald-400/40 rounded-l-[5rem] bg-gradient-to-r from-emerald-400/5 to-transparent blur-[0.5px]"
+                        />
+                        <motion.div
+                            animate={{
+                                x: [5, 15, 5],
+                                opacity: [0.4, 1, 0.4],
+                                scaleY: [0.8, 1.1, 0.8]
+                            }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+                            className="w-12 h-24 sm:w-16 sm:h-32 border-r-2 border-emerald-400/40 rounded-r-[5rem] bg-gradient-to-l from-emerald-400/5 to-transparent blur-[0.5px]"
+                        />
+                    </div>
+                </div>
+            )}
+        </AnimatePresence>
     </div>
 );
 
@@ -311,37 +348,55 @@ const FormCard = ({ data, currentField, t }: { data: FormData; currentField?: st
         { label: t.scheme, key: "scheme", value: data.scheme, icon: "🌾" }
     ];
 
+    const filledFields = fields.filter(f => f.value);
+    const activeField = fields.find(f => f.key === currentField);
+
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl border border-emerald-50 overflow-hidden"
+            className="w-full max-w-md bg-white border border-slate-100 rounded-3xl shadow-lg p-5 overflow-hidden"
         >
-            <div className="bg-emerald-600 px-6 py-5 flex items-center justify-between">
-                <div>
-                    <h3 className="text-white font-black text-lg tracking-tight">Application Live</h3>
-                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest leading-none mt-1">Status Tracking</p>
+            <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                    <ClipboardList size={20} />
                 </div>
-                <div className="bg-white/20 px-3 py-1 rounded-full border border-white/20">
-                    <span className="text-white text-[10px] font-black uppercase tracking-widest animate-pulse">Live</span>
+                <div>
+                    <h4 className="text-slate-900 font-black text-sm">Application Progress</h4>
+                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{filledFields.length} of {fields.length} completed</p>
                 </div>
             </div>
-            <div className="p-5 space-y-4 bg-gray-50/50">
+
+            <div className="space-y-2">
                 {fields.map((f) => {
                     const isActive = currentField === f.key;
+                    const hasValue = !!f.value;
                     return (
-                        <div key={f.key} className={`flex items-center gap-4 p-4 rounded-3xl transition-all duration-500 ${isActive ? "bg-white border-2 border-emerald-500 shadow-xl shadow-emerald-600/5 -translate-y-1 scale-[1.02]" : "bg-white border border-gray-100 shadow-sm opacity-60"}`}>
-                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl transition-colors ${isActive ? "bg-emerald-100 text-emerald-600" : "bg-gray-100"}`}>
-                                {f.icon}
-                            </div>
+                        <div
+                            key={f.key}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
+                                ? "bg-emerald-50 border border-emerald-200"
+                                : hasValue
+                                    ? "bg-slate-50 border border-transparent"
+                                    : "bg-slate-50/50 border border-transparent opacity-50"
+                                }`}
+                        >
+                            <span className="text-lg">{f.icon}</span>
                             <div className="flex-1 min-w-0">
-                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest leading-none mb-1">{f.label}</p>
-                                <p className={`text-sm font-black truncate transition-colors ${f.value ? "text-gray-900" : "text-gray-300 italic"}`}>{f.value || t.pending}</p>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{f.label}</p>
+                                <p className={`text-sm font-bold truncate ${f.value ? "text-slate-800" : "text-slate-300"}`}>
+                                    {f.value || t.pending}
+                                </p>
                             </div>
-                            {f.value && (
-                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
-                                    <CheckCircle2 size={14} />
-                                </motion.div>
+                            {hasValue && (
+                                <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                            )}
+                            {isActive && !hasValue && (
+                                <motion.div
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ repeat: Infinity, duration: 1.5 }}
+                                    className="w-2 h-2 bg-emerald-500 rounded-full"
+                                />
                             )}
                         </div>
                     );
@@ -370,60 +425,68 @@ export default function VoiceAssistantScreen({ lang }: { lang: Language }) {
         step: "greeting",
         selectedScheme: null,
     });
+    const [showTextInput, setShowTextInput] = useState(false);
+    /** Form shows ONLY when AI confirmed user wants to apply and is asking for details */
+    const [showForm, setShowForm] = useState(false);
 
     const [formData, setFormData] = useState<FormData>({
         name: "", phone: "", village: "", aadhaar: "", scheme: ""
     });
+
+    const deviceIdRef = useRef<string>(
+        typeof window !== "undefined" && typeof crypto !== "undefined" && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `device-${Date.now()}`
+    );
 
     const recognitionRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Initial Greeting - handles both regular and scheme-based greetings
     useEffect(() => {
-        // If we have a scheme context and haven't initialized with it yet
         if (schemeContext && !initializedWithScheme) {
             const schemeName = lang === "hi" ? schemeContext.nameHi : schemeContext.name;
-            const schemeBenefit = lang === "hi" ? schemeContext.benefitHi : schemeContext.benefit;
-            const schemeDesc = lang === "hi" ? schemeContext.descHi : schemeContext.desc;
-            
-            // Set the scheme in form data
-            setFormData(prev => ({
-                ...prev,
-                scheme: schemeName
-            }));
-            
-            setConvState(prev => ({
-                ...prev,
-                selectedScheme: schemeContext.id
-            }));
-            
-            // Auto-send user message and Didi's response
-            const userMessage: Message = {
-                id: "auto-user-apply",
-                role: "user",
-                content: lang === "hi" 
-                    ? `मुझे ${schemeName} योजना के लिए आवेदन करना है`
-                    : `I want to apply for ${schemeName} scheme`,
-                timestamp: new Date()
-            };
-            
-            const didiResponse: Message = {
-                id: "auto-didi-response",
-                role: "ai",
-                content: lang === "hi"
-                    ? `बहुत अच्छा! 🎉 आप **${schemeName}** के लिए आवेदन करना चाहते हैं।\n\n📋 **लाभ:** ${schemeBenefit}\n📝 **विवरण:** ${schemeDesc}\n\nचलिए आवेदन शुरू करते हैं! 📝\n\n${t.askName}`
-                    : `Great! 🎉 You want to apply for **${schemeName}**.\n\n📋 **Benefit:** ${schemeBenefit}\n📝 **Description:** ${schemeDesc}\n\nLet's start the application! 📝\n\n${t.askName}`,
-                timestamp: new Date()
-            };
-            
-            setMessages([userMessage, didiResponse]);
-            setConvState(prev => ({ ...prev, step: "collecting_name" }));
+            setFormData(prev => ({ ...prev, scheme: schemeName }));
+            setConvState(prev => ({ ...prev, selectedScheme: schemeContext.id }));
             setInitializedWithScheme(true);
-            
-            // Clear scheme context after using it
             setSchemeContext(null);
+            const applyText = lang === "hi"
+                ? `मुझे ${schemeName} योजना के लिए आवेदन करना है`
+                : `I want to apply for ${schemeName} scheme`;
+            addMessage("user", applyText);
+            setVoiceState("processing");
+            (async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/api/v1/process-text`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            text: applyText,
+                            user_id: deviceIdRef.current,
+                            language: lang === "hi" ? "hi-IN" : lang === "te" ? "te-IN" : "en-IN",
+                        }),
+                    });
+                    const data = await res.json();
+                    const extracted = data.extracted_data || {};
+                    setFormData(prev => ({
+                        name: extracted.name ?? prev.name,
+                        phone: extracted.phone ?? prev.phone,
+                        village: extracted.village ?? prev.village,
+                        aadhaar: extracted.aadhaar ?? prev.aadhaar,
+                        scheme: extracted.scheme ?? prev.scheme,
+                    }));
+                    if (data.show_form) setShowForm(true);
+                    const filled = [extracted.name, extracted.phone, extracted.village, extracted.aadhaar, extracted.scheme].filter(Boolean).length;
+                    const nextStep = filled >= 5 ? "review" : filled >= 4 ? "collecting_aadhaar" : filled >= 3 ? "collecting_village" : filled >= 2 ? "collecting_phone" : filled >= 1 ? "collecting_phone" : "collecting_name";
+                    setConvState(prev => ({ ...prev, step: nextStep }));
+                    addMessage("ai", data.ai_response || t.askName);
+                } catch {
+                    addMessage("ai", t.askName);
+                } finally {
+                    setVoiceState("idle");
+                }
+            })();
         } else if (!schemeContext && !initializedWithScheme && messages.length === 0) {
-            // Regular greeting without scheme
             setMessages([{
                 id: "initial-greeting",
                 role: "ai",
@@ -431,7 +494,7 @@ export default function VoiceAssistantScreen({ lang }: { lang: Language }) {
                 timestamp: new Date()
             }]);
         }
-    }, [schemeContext, lang, t, initializedWithScheme, messages.length, setSchemeContext]);
+    }, [schemeContext, initializedWithScheme, messages.length, setSchemeContext, lang, t]);
 
     useEffect(() => {
         // Use setTimeout to ensure DOM is fully rendered before scrolling
@@ -527,93 +590,71 @@ export default function VoiceAssistantScreen({ lang }: { lang: Language }) {
         }
     };
 
-    const processUserInput = (text: string) => {
+    const processUserInput = async (text: string) => {
         if (!text.trim()) return;
+
+        // Edit button: reset to name collection (frontend-only)
+        if (text === "edit_form") {
+            setFormData({ name: "", phone: "", village: "", aadhaar: "", scheme: formData.scheme || "" });
+            setConvState(prev => ({ ...prev, step: "collecting_name" }));
+            addMessage("ai", t.askName);
+            return;
+        }
+
         addMessage("user", text);
         setInputText("");
         setTranscript("");
         setVoiceState("processing");
 
-        setTimeout(() => {
-            setVoiceState("idle");
-            const lowerText = text.toLowerCase();
+        try {
+            const userId = deviceIdRef.current;
+            const langCode = lang === "hi" ? "hi-IN" : lang === "te" ? "te-IN" : "en-IN";
 
-            // Handle start application button from scheme context
-            if (text === "start_application") {
-                setConvState(prev => ({ ...prev, step: "collecting_name" }));
-                const schemeName = schemeContext
-                    ? (lang === "hi" ? schemeContext.nameHi : schemeContext.name)
-                    : formData.scheme;
-                addMessage("ai", lang === 'hi'
-                    ? `बहुत अच्छा! चलिए ${schemeName} के लिए आवेदन शुरू करते हैं। 📝\n\n${t.askName}`
-                    : lang === 'te'
-                        ? `చాలా మంచిది! ${schemeName} కోసం దరఖాస్తు ప్రారంభిద్దాం. 📝\n\n${t.askName}`
-                        : `Great! Let's start the application for ${schemeName}. 📝\n\n${t.askName}`);
-                return;
-            }
+            const res = await fetch(`${API_BASE}/api/v1/process-text`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: text === "submit_now" ? "submit" : text,
+                    user_id: userId,
+                    language: langCode,
+                }),
+            });
 
-            // Handle know more button from scheme context
-            if (text === "know_more") {
-                const schemeName = schemeContext
-                    ? (lang === "hi" ? schemeContext.nameHi : schemeContext.name)
-                    : formData.scheme;
-                const schemeBenefit = schemeContext
-                    ? (lang === "hi" ? schemeContext.benefitHi : schemeContext.benefit)
-                    : "";
-                const schemeDesc = schemeContext
-                    ? (lang === "hi" ? schemeContext.descHi : schemeContext.desc)
-                    : "";
+            const data = await res.json();
+            const aiResponse = data.ai_response || (data.status === "error" ? "Something went wrong. Please try again." : "");
+            const extracted = data.extracted_data || {};
+            const appStatus = data.application_status || "In Progress";
 
-                addMessage("ai", lang === 'hi'
-                    ? `**${schemeName}** के बारे में अधिक जानकारी:\n\n🎯 **लाभ:** ${schemeBenefit}\n📋 **विवरण:** ${schemeDesc}\n\n**पात्रता:**\n• भारतीय नागरिक होना चाहिए\n• आधार कार्ड अनिवार्य\n• बैंक खाता होना चाहिए\n\n**आवश्यक दस्तावेज:**\n• आधार कार्ड\n• बैंक पासबुक\n• मोबाइल नंबर\n\nक्या आप अभी आवेदन करना चाहते हैं?`
-                    : lang === 'te'
-                        ? `**${schemeName}** గురించి మరింత సమాచారం:\n\n🎯 **లాభం:** ${schemeBenefit}\n📋 **వివరణ:** ${schemeDesc}\n\n**అర్హత:**\n• భారతీయ పౌరుడు అయి ఉండాలి\n• ఆధార్ కార్డు తప్పనిసరి\n• బ్యాంకు ఖాతా ఉండాలి\n\n**అవసరమైన పత్రాలు:**\n• ఆధార్ కార్డు\n• బ్యాంకు పాస్‌బుక్\n• మొబైల్ నంబర్\n\nమీరు ఇప్పుడు దరఖాస్తు చేయాలనుకుంటున్నారా?`
-                        : `More information about **${schemeName}**:\n\n🎯 **Benefit:** ${schemeBenefit}\n📋 **Description:** ${schemeDesc}\n\n**Eligibility:**\n• Must be Indian citizen\n• Aadhaar card mandatory\n• Must have bank account\n\n**Required Documents:**\n• Aadhaar Card\n• Bank Passbook\n• Mobile Number\n\nWould you like to apply now?`,
-                    [
-                        { label: t.startApplication || "Start Application", value: "start_application", variant: "primary" },
-                    ]);
-                return;
-            }
+            setFormData(prev => ({
+                name: extracted.name ?? prev.name,
+                phone: extracted.phone ?? prev.phone,
+                village: extracted.village ?? prev.village,
+                aadhaar: extracted.aadhaar ?? prev.aadhaar,
+                scheme: extracted.scheme ?? prev.scheme,
+            }));
 
-            if (convState.step === "greeting") {
-                const foundScheme = SCHEMES.find(s =>
-                    lowerText.includes(s.name.toLowerCase()) ||
-                    s.keywords.some(k => lowerText.includes(k.toLowerCase()))
-                );
-                if (foundScheme) {
-                    setFormData(prev => ({ ...prev, scheme: foundScheme.name }));
-                    setConvState(prev => ({ ...prev, step: "collecting_name" }));
-                    addMessage("ai", lang === 'hi' ? `अरे वाह! आप ${foundScheme.name} के लिए आवेदन करना चाहते हैं। ${t.askName}` : lang === 'te' ? `చాలా మంచిది! మీరు ${foundScheme.name} కోసం దరఖాస్తు చేయాలనుకుంటున్నారు. ${t.askName}` : `Great! You want to apply for ${foundScheme.name}. ${t.askName}`);
-                } else {
-                    setConvState(prev => ({ ...prev, step: "collecting_name" }));
-                    addMessage("ai", t.askName);
-                }
-            } else if (convState.step === "collecting_name") {
-                setFormData(prev => ({ ...prev, name: text }));
-                setConvState(prev => ({ ...prev, step: "collecting_phone" }));
-                addMessage("ai", t.askPhone);
-            } else if (convState.step === "collecting_phone") {
-                setFormData(prev => ({ ...prev, phone: text }));
-                setConvState(prev => ({ ...prev, step: "collecting_village" }));
-                addMessage("ai", t.askVillage);
-            } else if (convState.step === "collecting_village") {
-                setFormData(prev => ({ ...prev, village: text }));
-                setConvState(prev => ({ ...prev, step: "collecting_aadhaar" }));
-                addMessage("ai", t.askAadhaar);
-            } else if (convState.step === "collecting_aadhaar") {
-                setFormData(prev => ({ ...prev, aadhaar: text }));
+            const merged = { ...formData, ...extracted };
+            const filled = [merged.name, merged.phone, merged.village, merged.aadhaar, merged.scheme].filter(Boolean).length;
+            if (appStatus === "Submitted") {
+                setConvState(prev => ({ ...prev, step: "submitted" }));
+                addMessage("ai", aiResponse || t.submitted);
+            } else if (filled >= 5) {
                 setConvState(prev => ({ ...prev, step: "review" }));
-                addMessage("ai", t.confirmDetails, [
+                addMessage("ai", aiResponse || t.confirmDetails, [
                     { label: t.submit, value: "submit_now", variant: "primary" },
                     { label: t.edit, value: "edit_form", variant: "secondary" }
                 ]);
-            } else if (text.toLowerCase().includes("submit") || text === "submit_now") {
-                setConvState(prev => ({ ...prev, step: "submitted" }));
-                addMessage("ai", t.submitted);
             } else {
-                addMessage("ai", lang === 'hi' ? "ठीक है। क्या आप कुछ और पूछना चाहते हैं?" : lang === 'te' ? "సరే. మీరు ఇంకేదైనా అడగాలనుకుంటున్నారా?" : "Okay. Do you want to ask anything else?");
+                const nextStep = !merged.name ? "collecting_name" : !merged.phone ? "collecting_phone" : !merged.village ? "collecting_village" : !merged.aadhaar ? "collecting_aadhaar" : "collecting_scheme";
+                setConvState(prev => ({ ...prev, step: nextStep }));
+                addMessage("ai", aiResponse);
             }
-        }, 1200);
+        } catch (err) {
+            console.error("process-text error:", err);
+            addMessage("ai", lang === "hi" ? "कनेक्शन में समस्या। कृपया फिर से कोशिश करें।" : "Connection error. Please try again.");
+        } finally {
+            setVoiceState("idle");
+        }
     };
 
     const handleSend = () => {
@@ -638,7 +679,7 @@ export default function VoiceAssistantScreen({ lang }: { lang: Language }) {
 
     return (
         <div className="flex flex-col h-full bg-white overflow-hidden font-sans selection:bg-emerald-100">
-            <div className="flex-1 overflow-y-auto px-6 py-10 space-y-8 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5 scrollbar-hide">
                 <AnimatePresence mode="popLayout" initial={false}>
                     {messages.map((msg) => (
                         <MessageBubble key={msg.id} message={msg} lang={lang} onButtonClick={(val) => processUserInput(val)} />
@@ -653,7 +694,7 @@ export default function VoiceAssistantScreen({ lang }: { lang: Language }) {
                     )}
                 </AnimatePresence>
 
-                {convState.step !== "greeting" && convState.step !== "submitted" && (
+                {showForm && (
                     <motion.div layout className="flex justify-start py-4">
                         <FormCard data={formData} currentField={convState.step.replace("collecting_", "")} t={t} />
                     </motion.div>
@@ -669,129 +710,158 @@ export default function VoiceAssistantScreen({ lang }: { lang: Language }) {
                         </div>
                     </motion.div>
                 )}
-                <div ref={messagesEndRef} className="h-40" />
+                <div ref={messagesEndRef} className="h-12 sm:h-20" />
             </div>
 
-            {/* Bottom Input Area */}
-            <div className="bg-white/95 backdrop-blur-2xl border-t border-gray-100 px-4 pt-4 pb-8 shadow-[0_-15px_50px_rgba(0,0,0,0.05)] z-50 relative">
-                {/* Listening Glow Line */}
-                <AnimatePresence>
-                    {isListening && (
-                        <motion.div
-                            initial={{ opacity: 0, scaleX: 0 }}
-                            animate={{ opacity: 1, scaleX: 1 }}
-                            exit={{ opacity: 0, scaleX: 0 }}
-                            className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-white to-emerald-500 origin-center"
-                        />
-                    )}
-                </AnimatePresence>
+            {/* Centered Voice/Text Interface */}
+            <div className="bg-white/95 backdrop-blur-xl px-6 pt-2 pb-6 z-50 relative border-t border-slate-100/50">
+                <div className="max-w-4xl mx-auto flex flex-col items-center">
 
-                {/* Suggestions Carousel */}
-                {convState.step === "greeting" && messages.length <= 1 && !isListening && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex gap-3 mb-4 overflow-x-auto pb-2 no-scrollbar px-1"
-                    >
-                        {SCHEMES.map(s => (
-                            <motion.button
-                                key={s.id}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                onClick={() => processUserInput(s.name)}
-                                className="whitespace-nowrap bg-white border-2 border-gray-100 px-5 py-3 rounded-xl text-[13px] font-black text-gray-800 shadow-md hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-emerald-50 transition-all active:scale-95 flex items-center gap-2"
+                    {/* Suggestions (Only in Home/Greeting state) */}
+                    <AnimatePresence>
+                        {!showForm && messages.length <= 2 && !isListening && !showTextInput && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="w-full flex gap-2 overflow-x-auto pb-4 no-scrollbar justify-start md:justify-center mb-1 px-6"
                             >
-                                <span className="text-base">{s.emoji}</span>
-                                {lang === 'hi' ? s.nameHi : lang === 'te' ? s.nameTe : s.name}
-                            </motion.button>
-                        ))}
-                    </motion.div>
-                )}
+                                {SCHEMES.map(s => (
+                                    <motion.button
+                                        key={s.id}
+                                        whileHover={{ y: -2, scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => processUserInput(s.name)}
+                                        className="flex-shrink-0 whitespace-nowrap bg-white border border-slate-200 px-3.5 py-2 rounded-xl text-[11px] font-black text-slate-800 shadow-sm hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-emerald-500/10 transition-all flex items-center gap-2"
+                                    >
+                                        <span className="text-sm">{s.emoji}</span>
+                                        {lang === 'hi' ? s.nameHi : lang === 'te' ? s.nameTe : s.name}
+                                    </motion.button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                <div className="flex items-end gap-3 max-w-5xl mx-auto min-h-[4rem]">
-                    {/* Microphone Button (Compact) */}
-                    <motion.button
-                        layout
-                        whileTap={{ scale: 0.9 }}
-                        onClick={toggleMic}
-                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-xl flex-shrink-0 z-20 relative overflow-hidden mb-0.5 ${isListening ? "bg-red-500 text-white shadow-red-200 ring-4 ring-red-50" : "bg-emerald-600 text-white shadow-emerald-200 ring-4 ring-emerald-50"}`}
-                    >
-                        {isListening ? <MicOff size={24} strokeWidth={2.5} /> : <Mic size={26} strokeWidth={2.5} />}
-                    </motion.button>
-
-                    {/* Integrated Input Area (Flex height) */}
-                    <motion.div
-                        layout
-                        className={`flex-1 relative group min-h-[3.5rem] rounded-2xl border-2 transition-all duration-500 flex items-end px-4 gap-3 py-1 ${isListening ? "bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-500/5 pulse-subtle" : "bg-gray-50 border-transparent shadow-inner"}`}
-                    >
-                        {/* Didi Icon + Frequency (Sticky to bottom of input) */}
-                        <AnimatePresence>
-                            {isListening && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: -10, scale: 0.5 }}
-                                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                                    exit={{ opacity: 0, x: -10, scale: 0.5 }}
-                                    className="flex items-center gap-2 flex-shrink-0 mb-3"
+                    <AnimatePresence mode="wait">
+                        {showTextInput ? (
+                            <motion.div
+                                key="text-input"
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 20 }}
+                                className="w-full flex items-end gap-3 bg-white border border-slate-200 rounded-[2.5rem] p-3 shadow-2xl shadow-slate-200/50 group focus-within:border-emerald-500 focus-within:shadow-xl focus-within:shadow-emerald-500/5 transition-all"
+                            >
+                                <button
+                                    onClick={() => setShowTextInput(false)}
+                                    className="w-14 h-14 bg-slate-50 text-slate-400 hover:text-emerald-600 rounded-3xl flex items-center justify-center transition-all active:scale-90 border border-slate-100 bg-gradient-to-br from-white to-slate-50 shadow-sm"
                                 >
-                                    <div className="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center shadow-md">
-                                        <Bot size={18} />
-                                    </div>
-                                    <SmallVoiceWave />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        <textarea
-                            ref={textareaRef}
-                            rows={1}
-                            value={isListening ? transcript : inputText}
-                            onChange={(e) => {
-                                if (!isListening) {
-                                    setInputText(e.target.value);
-                                }
-                            }}
-                            onKeyDown={(e) => {
-                                if (!isListening && e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSend();
-                                }
-                            }}
-                            placeholder={isListening ? "" : t.inputPlaceholder}
-                            readOnly={isListening}
-                            className={`flex-1 bg-transparent text-[16px] font-black focus:outline-none transition-all resize-none py-3.5 scrollbar-hide block ${isListening ? "text-emerald-900 placeholder:text-emerald-300" : "text-gray-900 placeholder:text-gray-300"}`}
-                        />
-
-                        {/* Send Button (Floating on bottom right) */}
-                        <AnimatePresence>
-                            {!isListening && inputText.trim() !== "" && (
+                                    <MessageSquare size={22} />
+                                </button>
+                                <textarea
+                                    ref={textareaRef}
+                                    rows={1}
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSend();
+                                        }
+                                    }}
+                                    placeholder={t.inputPlaceholder}
+                                    className="flex-1 bg-transparent text-base font-black text-slate-800 focus:outline-none resize-none py-4 px-2 custom-scrollbar"
+                                />
                                 <motion.button
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    whileTap={{ scale: 0.9 }}
                                     onClick={handleSend}
-                                    className="w-10 h-10 flex items-center justify-center bg-emerald-600 text-white rounded-xl shadow-lg active:scale-95 flex-shrink-0 mb-1.5"
+                                    disabled={!inputText.trim()}
+                                    className={`w-14 h-14 rounded-3xl flex items-center justify-center transition-all shadow-xl ${inputText.trim() ? "bg-emerald-600 text-white shadow-emerald-200" : "bg-slate-100 text-slate-300"}`}
                                 >
-                                    <Send size={18} />
+                                    <Send size={22} />
                                 </motion.button>
-                            )}
-                        </AnimatePresence>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="voice-input"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="relative flex flex-col items-center gap-3 w-full"
+                            >
+                                <div className="relative flex items-center justify-center h-32 sm:h-40 w-full lg:-mt-6">
+                                    <VoiceWaves isListening={isListening} />
 
-                        {/* Stop Label (Floating in pod) */}
-                        <AnimatePresence>
-                            {isListening && (
-                                <motion.button
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    onClick={toggleMic}
-                                    className="bg-red-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:bg-red-600 active:scale-95 mb-3"
-                                >
-                                    Stop
-                                </motion.button>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
+                                    <motion.button
+                                        layoutId="mic-button"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={toggleMic}
+                                        className={`relative z-10 w-24 h-24 sm:w-28 sm:h-28 rounded-[2.8rem] flex items-center justify-center transition-all shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] ${isListening
+                                            ? "bg-red-500 text-white ring-[14px] ring-red-50 shadow-red-200"
+                                            : "bg-emerald-600 text-white ring-[14px] ring-emerald-50 shadow-emerald-200"
+                                            }`}
+                                    >
+                                        <AnimatePresence mode="wait">
+                                            {isListening ? (
+                                                <motion.div key="stop" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                                                    <MicOff size={36} strokeWidth={2.5} />
+                                                </motion.div>
+                                            ) : (
+                                                <motion.div key="mic" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                                                    <Mic size={40} strokeWidth={2.5} />
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        {/* Listening Pulsing Core */}
+                                        {isListening && (
+                                            <motion.div
+                                                className="absolute inset-0 rounded-[2.8rem] border-4 border-white/30"
+                                                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
+                                                transition={{ duration: 1, repeat: Infinity }}
+                                            />
+                                        )}
+                                    </motion.button>
+
+                                    {/* Text Toggle Button */}
+                                    <motion.button
+                                        initial={{ opacity: 0, scale: 0 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        onClick={() => setShowTextInput(true)}
+                                        className="absolute right-0 sm:right-[15%] lg:right-[25%] w-14 h-14 bg-white text-slate-400 hover:text-emerald-600 rounded-3xl flex items-center justify-center shadow-xl border border-slate-100 active:scale-90 transition-all group"
+                                        title="Switch to Typing"
+                                    >
+                                        <Keyboard size={28} className="group-hover:rotate-12 transition-transform" />
+                                        <span className="absolute bottom-full mb-3 bg-slate-900 text-white text-[9px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">TYPE NOW</span>
+                                    </motion.button>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-1.5">
+                                    <motion.p
+                                        animate={isListening ? { opacity: [0.5, 1, 0.5] } : {}}
+                                        transition={{ duration: 1.5, repeat: Infinity }}
+                                        className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em]"
+                                    >
+                                        {isListening ? t.listening : (lang === "hi" ? "बात करने के लिए बटन दबाएं" : "TAP TO SPEAK")}
+                                    </motion.p>
+
+                                    <AnimatePresence>
+                                        {isListening && transcript && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                className="bg-white/80 backdrop-blur-md border border-emerald-100 px-8 py-4 rounded-[2rem] max-w-lg text-center shadow-xl shadow-emerald-500/5 mt-2"
+                                            >
+                                                <p className="text-base font-black text-slate-900 leading-relaxed italic">
+                                                    "{transcript}"
+                                                </p>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
