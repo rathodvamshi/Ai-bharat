@@ -8,6 +8,7 @@ applications:
             - npm ci
         build:
           commands:
+            - env | grep -e NEXT_PUBLIC_ >> .env.production
             - npm run build
       artifacts:
         baseDirectory: .next
@@ -17,3 +18,4 @@ applications:
         paths:
           - node_modules/**/*
           - .next/cache/**/*
+    framework: Next.js - SSR
