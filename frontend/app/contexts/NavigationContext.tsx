@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Language, t, TRANSLATIONS } from "../lib/translations";
+import { Language, t } from "../lib/translations";
+import TRANSLATIONS from "../lib/translations";
 
 // Re-export Language type
 export type { Language } from "../lib/translations";
@@ -48,15 +49,15 @@ export const NAV_ITEMS: {
     { id: "schemes", icon: "🏛️", label: "Schemes", labelHi: "योजनाएं", labelBn: "প্রকল্প", labelTe: "పథకాలు", labelMr: "योजना", labelTa: "திட்டங்கள்" },
     { id: "voice", icon: "👩‍💼", label: "Talk to Didi", labelHi: "दीदी से बात करें", labelBn: "দিদির সাথে কথা বলুন", labelTe: "దీదీతో మాట్లాడండి", labelMr: "दीदींशी बोला", labelTa: "திதியுடன் பேசுங்கள்", isMic: true },
     { id: "history", icon: "📋", label: "History", labelHi: "इतिहास", labelBn: "ইতিহাস", labelTe: "చరిత్ర", labelMr: "इतिहास", labelTa: "வரலாறு" },
-    { id: "profile", icon: "👤", label: "Profile", labelHi: "प्रोफ़ाइल", labelBn: "প্রோফাইল", labelTe: "ప్రొఫైల్", labelMr: "प्रोफाइल", labelTa: "சுயவிவரம்" },
+    { id: "profile", icon: "👤", label: "Profile", labelHi: "प्रोफ़ाइल", labelBn: "প্রোফাইল", labelTe: "ప్రొఫైల్", labelMr: "प्रोफाइल", labelTa: "சுயவிவரம்" },
   ];
 
 export const TAB_LABELS: Record<NavTab, Record<Language, string>> = {
-  home: { en: "Janashayak", hi: "जन-सहायक", bn: "জন-সহায়ক", te: "జన్-సహాయక్", mr: "जन-सहायक", ta: "விவசாயி உதவியாளர்" },
+  home: { en: "Jan-Sahayak", hi: "जन-सहायक", bn: "জন-সহায়ক", te: "జన్-సహాయక్", mr: "जन-सहायक", ta: "விவசாயி உதவியாளர்" },
   schemes: { en: "Government Schemes", hi: "सरकारी योजनाएं", bn: "সরকারি প্রকল্প", te: "ప్రభుత్వ పథకాలు", mr: "सरकारी योजना", ta: "அரசு திட்டங்கள்" },
   voice: { en: "Talk to Didi", hi: "दीदी से बात करें", bn: "দিদির সাথে কথা বলুন", te: "దీదీతో మాట్లాడండి", mr: "दीदींशी बोला", ta: "திதியுடன் பேசுங்கள்" },
   history: { en: "My Applications", hi: "मेरे आवेदन", bn: "আমার আবেদন", te: "నా దరఖాస్తులు", mr: "माझे अर्ज", ta: "எனது விண்ணப்பங்கள்" },
-  profile: { en: "My Profile", hi: "मेरी प्रोफ़ाइल", bn: "আমার প্রোফাইল", te: "నా ప్రొఫైల్", mr: "माझी प्रोफाइल", ta: "எனது சுயவிவரம்" },
+  profile: { en: "My Profile", hi: "मेरी प्रोफ़ाइल", bn: "আমার প্রোফाइल", te: "నా ప్రొಫೈల్", mr: "माझी प्रोफाइल", ta: "எனது சுயவிவரம்" },
 };
 
 // Helper to get label by language

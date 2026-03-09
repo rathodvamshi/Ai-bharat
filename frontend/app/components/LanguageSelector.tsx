@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Check } from "lucide-react";
-import { Language, LANGUAGES } from "../lib/translations";
+import { Language, LANGUAGES, LanguageInfo } from "@/app/lib/translations";
 
 interface LanguageSelectorProps {
   currentLanguage: Language;
@@ -33,7 +33,7 @@ export default function LanguageSelector({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const currentLang = LANGUAGES.find(l => l.code === currentLanguage) || LANGUAGES[0];
+  const currentLang = LANGUAGES.find((l: LanguageInfo) => l.code === currentLanguage) || LANGUAGES[0];
 
   const handleSelect = (lang: Language) => {
     onLanguageChange(lang);
@@ -71,7 +71,7 @@ export default function LanguageSelector({
                 boxShadow: "0 8px 30px rgba(46,125,50,0.15)"
               }}
             >
-              {LANGUAGES.map((lang) => (
+              {LANGUAGES.map((lang: LanguageInfo) => (
                 <button
                   key={lang.code}
                   onClick={() => handleSelect(lang.code)}
@@ -129,7 +129,7 @@ export default function LanguageSelector({
                 boxShadow: "0 8px 30px rgba(46,125,50,0.15)"
               }}
             >
-              {LANGUAGES.map((lang) => (
+              {LANGUAGES.map((lang: LanguageInfo) => (
                 <button
                   key={lang.code}
                   onClick={() => handleSelect(lang.code)}
@@ -188,7 +188,7 @@ export default function LanguageSelector({
               boxShadow: "0 8px 30px rgba(46,125,50,0.15)"
             }}
           >
-            {LANGUAGES.map((lang) => (
+            {LANGUAGES.map((lang: LanguageInfo) => (
               <button
                 key={lang.code}
                 onClick={() => handleSelect(lang.code)}

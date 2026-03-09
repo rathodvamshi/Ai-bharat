@@ -25,13 +25,23 @@ import {
   FileText,
 } from "lucide-react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 type Application = {
-  id: string;
+  application_id: string;  // actual PK from bedrock (e.g. PMK-2026-00001)
   user_id: string;
   status: string;
-  timestamp: number;
+  submitted_at: string;   // ISO string from bedrock
+  scheme_id?: string;
+  scheme_name?: string;
   form_data: Record<string, string | null>;
+  eligibility_answers?: Record<string, string>;
+  uploaded_documents?: Record<string, unknown>;
+  admin_notes?: string;
   rejection_reason?: string;
+  // legacy fields from old top-level records
+  id?: string;
+  timestamp?: number;
 };
 
 export default function AdminDashboard() {
@@ -43,11 +53,12 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
 
   const fetchApplications = async () => {
     try {
       setIsRefreshing(true);
-      const response = await fetch("http://localhost:8000/api/v1/dummy-gov/applications");
+      const response = await fetch(`${API_BASE}/api/v1/dummy-gov/applications`);
       const data = await response.json();
       setApplications(data.applications);
       setLoading(false);
@@ -65,43 +76,53 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleApprove = async (id: string) => {
-    await fetch(`http://localhost:8000/api/v1/dummy-gov/applications/${id}/approve`, {
+  const handleApprove = async (app: Application) => {
+    const appId = app.application_id || app.id || "";
+    await fetch(`${API_BASE}/api/v1/dummy-gov/applications/${appId}/approve`, {
       method: "PUT",
     });
     setSelectedApp(null);
     fetchApplications();
   };
 
-  const handleReject = async (id: string) => {
+  const handleReject = async (app: Application) => {
     if (!rejectReason.trim()) return alert("Please provide a reason for rejection.");
-
-    await fetch(`http://localhost:8000/api/v1/dummy-gov/applications/${id}/reject`, {
+    const appId = app.application_id || app.id || "";
+    await fetch(`${API_BASE}/api/v1/dummy-gov/applications/${appId}/reject`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reason: rejectReason }),
     });
-
     setShowRejectInput(false);
     setRejectReason("");
     setSelectedApp(null);
     fetchApplications();
   };
 
-  // Stats calculation
+  // Stats calculation — case-insensitive
   const stats = {
     total: applications.length,
-    pending: applications.filter((a) => a.status === "Submitted" || a.status === "Pending").length,
-    approved: applications.filter((a) => a.status === "Approved").length,
-    rejected: applications.filter((a) => a.status === "Rejected").length,
+    pending: applications.filter((a) => {
+      const s = (a?.status || "").toLowerCase();
+      return s !== "approved" && s !== "rejected";
+    }).length,
+    approved: applications.filter((a) => (a?.status || "").toLowerCase() === "approved").length,
+    rejected: applications.filter((a) => (a?.status || "").toLowerCase() === "rejected").length,
   };
 
   // Filtered applications
   const filteredApps = applications.filter((app) => {
+    if (!app) return false;
+    const appId = app.application_id || app.id || "";
+    const sQuery = searchQuery.toLowerCase();
     const matchesSearch =
-      app.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.user_id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || app.status.toLowerCase() === statusFilter.toLowerCase();
+      (appId.toLowerCase()).includes(sQuery) ||
+      (app.user_id?.toLowerCase() || "").includes(sQuery) ||
+      (app.scheme_name?.toLowerCase() || "").includes(sQuery);
+    const appStatus = (app.status || "").toLowerCase();
+    const matchesStatus = statusFilter === "all" ||
+      appStatus === statusFilter.toLowerCase() ||
+      (statusFilter === "submitted" && appStatus !== "approved" && appStatus !== "rejected");
     return matchesSearch && matchesStatus;
   });
 
@@ -117,15 +138,12 @@ export default function AdminDashboard() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Approved":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "Rejected":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "Submitted":
-        return "bg-blue-100 text-blue-700 border-blue-200";
-      default:
-        return "bg-amber-100 text-amber-700 border-amber-200";
+    const s = (status || "").toLowerCase();
+    switch (s) {
+      case "approved": return "bg-green-100 text-green-700 border-green-200";
+      case "rejected": return "bg-red-100 text-red-700 border-red-200";
+      case "submitted": return "bg-blue-100 text-blue-700 border-blue-200";
+      default: return "bg-amber-100 text-amber-700 border-amber-200";
     }
   };
 
@@ -156,7 +174,7 @@ export default function AdminDashboard() {
               >
                 <RefreshCw className="w-5 h-5 text-slate-600" />
               </motion.button>
-              
+
               <Link href="/">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -287,21 +305,24 @@ export default function AdminDashboard() {
                 <tbody className="divide-y divide-slate-100">
                   {filteredApps.map((app, index) => (
                     <motion.tr
-                      key={app.id}
+                      key={app.application_id || app.id || `app-${index}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                       className="hover:bg-green-50/50 transition-colors group"
                     >
                       <td className="p-4">
-                        <span className="font-mono font-semibold text-slate-800">{app.id}</span>
+                        <span className="font-mono font-semibold text-slate-800">{app.application_id || app.id || "N/A"}</span>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                             <User className="w-4 h-4 text-green-600" />
                           </div>
-                          <span className="text-slate-600 font-medium">{app.user_id}</span>
+                          <div>
+                            <span className="text-slate-600 font-medium block text-sm">{app.user_id}</span>
+                            {app.scheme_name && <span className="text-xs text-slate-400">{app.scheme_name}</span>}
+                          </div>
                         </div>
                       </td>
                       <td className="p-4">
@@ -313,11 +334,11 @@ export default function AdminDashboard() {
                       <td className="p-4">
                         <div className="flex items-center gap-2 text-slate-500 text-sm">
                           <Calendar className="w-4 h-4" />
-                          {new Date(app.timestamp * 1000).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
+                          {app.submitted_at
+                            ? new Date(app.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                            : app.timestamp
+                              ? new Date(app.timestamp * 1000).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                              : "N/A"}
                         </div>
                       </td>
                       <td className="p-4">
@@ -364,7 +385,7 @@ export default function AdminDashboard() {
               <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-5 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-white">Application Details</h2>
-                  <p className="text-green-100 text-sm font-mono">{selectedApp.id}</p>
+                  <p className="text-green-100 text-sm font-mono">{selectedApp.application_id || selectedApp.id}</p>
                 </div>
                 <button
                   onClick={() => setSelectedApp(null)}
@@ -378,12 +399,12 @@ export default function AdminDashboard() {
               <div className="p-6 overflow-y-auto flex-1">
                 {/* Status Badge */}
                 <div className="flex items-center justify-between mb-6">
-                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border ${getStatusColor(selectedApp.status)}`}>
-                    {getStatusIcon(selectedApp.status)}
-                    {selectedApp.status}
+                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border ${getStatusColor(selectedApp.status || "")}`}>
+                    {getStatusIcon(selectedApp.status || "")}
+                    {selectedApp.status || "Pending"}
                   </span>
                   <span className="text-sm text-slate-500">
-                    Citizen ID: <span className="font-semibold text-slate-700">{selectedApp.user_id}</span>
+                    Citizen ID: <span className="font-semibold text-slate-700">{selectedApp.user_id || "N/A"}</span>
                   </span>
                 </div>
 
@@ -394,13 +415,20 @@ export default function AdminDashboard() {
                     Extracted Citizen Data
                   </h3>
 
-                  {Object.keys(selectedApp.form_data).length === 0 ? (
+                  {!selectedApp.form_data || Object.keys(selectedApp.form_data).length === 0 ? (
                     <p className="text-slate-500 text-sm text-center py-4">No data extracted yet.</p>
                   ) : (
                     <div className="space-y-3">
-                      {Object.entries(selectedApp.form_data).map(([key, value]) => (
+                      {Object.entries(selectedApp.form_data)
+                        .filter(([key]) => {
+                          // Filter out document-related fields
+                          const docKeywords = ['doc', 'document', 'passbook', 'record', 'certificate', 'upload', 'file', 'photo', 'image'];
+                          const keyLower = key.toLowerCase();
+                          return !docKeywords.some(kw => keyLower.includes(kw));
+                        })
+                        .map(([key, value], idx) => (
                         <div
-                          key={key}
+                          key={`${key}-${idx}`}
                           className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-3 rounded-xl border border-slate-100"
                         >
                           <span className="text-slate-500 text-sm font-medium capitalize">{key.replace(/_/g, " ")}</span>
@@ -411,8 +439,112 @@ export default function AdminDashboard() {
                   )}
                 </div>
 
+                {/* Uploaded Documents Section */}
+                {(() => {
+                  // Gather documents from both uploaded_documents and form_data
+                  const docKeywords = ['doc', 'document', 'passbook', 'record', 'certificate', 'upload', 'file', 'photo', 'image'];
+                  const documentsFromFormData = selectedApp.form_data 
+                    ? Object.entries(selectedApp.form_data).filter(([key]) => {
+                        const keyLower = key.toLowerCase();
+                        return docKeywords.some(kw => keyLower.includes(kw));
+                      })
+                    : [];
+                  
+                  const hasDocuments = (selectedApp.uploaded_documents && Object.keys(selectedApp.uploaded_documents).length > 0) || documentsFromFormData.length > 0;
+                  
+                  if (!hasDocuments) return null;
+                  
+                  return (
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100 mb-6">
+                      <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <FileCheck className="w-5 h-5 text-blue-600" />
+                        Uploaded Documents
+                      </h3>
+                      <div className="space-y-3">
+                        {/* Documents from uploaded_documents */}
+                        {selectedApp.uploaded_documents && Object.entries(selectedApp.uploaded_documents).map(([docType, docInfo]: [string, unknown], idx) => {
+                          const doc = docInfo as { filename?: string; url?: string; uploaded_at?: string; file_type?: string };
+                          const fileUrl = doc?.url?.startsWith('/static') 
+                            ? `${API_BASE}${doc.url}` 
+                            : doc?.url;
+                          return (
+                            <div
+                              key={`uploaded-${docType}-${idx}`}
+                              className="bg-white p-4 rounded-xl border border-blue-100 hover:border-blue-300 transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                                    <FileText className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-slate-700 capitalize">{docType.replace(/_/g, " ")}</p>
+                                    <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                      Document uploaded
+                                      {doc?.uploaded_at && ` • ${new Date(doc.uploaded_at).toLocaleDateString()}`}
+                                    </p>
+                                  </div>
+                                </div>
+                                {fileUrl && (
+                                  <button
+                                    onClick={() => setPreviewDoc({ url: fileUrl, name: docType })}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all shadow-md hover:shadow-lg"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    View
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        
+                        {/* Documents from form_data */}
+                        {documentsFromFormData.map(([docType, docUrl], idx) => {
+                          const urlStr = String(docUrl || '');
+                          const fileUrl = urlStr.startsWith('/static') 
+                            ? `${API_BASE}${urlStr}` 
+                            : urlStr;
+                          const isValidUrl = urlStr.startsWith('/static') || urlStr.startsWith('http');
+                          return (
+                            <div
+                              key={`formdata-${docType}-${idx}`}
+                              className="bg-white p-4 rounded-xl border border-blue-100 hover:border-blue-300 transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                                    <FileText className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-slate-700 capitalize">{docType.replace(/_/g, " ")}</p>
+                                    <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                      Document uploaded
+                                    </p>
+                                  </div>
+                                </div>
+                                {isValidUrl && (
+                                  <button
+                                    onClick={() => setPreviewDoc({ url: fileUrl, name: docType })}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all shadow-md hover:shadow-lg"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    View
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Rejection Reason */}
-                {selectedApp.status === "Rejected" && selectedApp.rejection_reason && (
+                {selectedApp.status && (selectedApp.status.toLowerCase() === "rejected") && selectedApp.rejection_reason && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -429,14 +561,14 @@ export default function AdminDashboard() {
                 )}
 
                 {/* Action Buttons */}
-                {selectedApp.status !== "Approved" && selectedApp.status !== "Rejected" && (
+                {selectedApp.status && !(selectedApp.status.toLowerCase() === "approved") && !(selectedApp.status.toLowerCase() === "rejected") && (
                   <div className="space-y-4">
                     {!showRejectInput ? (
                       <div className="flex gap-3">
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => handleApprove(selectedApp.id)}
+                          onClick={() => handleApprove(selectedApp)}
                           className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-200 hover:shadow-xl transition-shadow"
                         >
                           <CheckCircle2 className="w-5 h-5" />
@@ -470,7 +602,7 @@ export default function AdminDashboard() {
                           <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            onClick={() => handleReject(selectedApp.id)}
+                            onClick={() => handleReject(selectedApp)}
                             className="flex-1 bg-red-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-red-700 transition-colors"
                           >
                             Confirm Rejection
@@ -486,6 +618,90 @@ export default function AdminDashboard() {
                         </div>
                       </motion.div>
                     )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Document Preview Modal */}
+      <AnimatePresence>
+        {previewDoc && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
+            onClick={() => setPreviewDoc(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] shadow-2xl overflow-hidden flex flex-col"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white capitalize">{previewDoc.name.replace(/_/g, " ")}</h3>
+                    <p className="text-blue-100 text-xs">Document Preview</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={previewDoc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-white text-sm font-semibold transition-colors"
+                  >
+                    Open in New Tab
+                  </a>
+                  <button
+                    onClick={() => setPreviewDoc(null)}
+                    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Document Content */}
+              <div className="flex-1 overflow-auto p-4 bg-slate-100">
+                {previewDoc.url.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) ? (
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <img
+                      src={previewDoc.url}
+                      alt={previewDoc.name}
+                      className="max-w-full max-h-[70vh] rounded-xl shadow-lg object-contain"
+                    />
+                  </div>
+                ) : previewDoc.url.match(/\.pdf$/i) ? (
+                  <iframe
+                    src={previewDoc.url}
+                    className="w-full h-[70vh] rounded-xl border-0"
+                    title={previewDoc.name}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+                    <div className="w-20 h-20 bg-slate-200 rounded-2xl flex items-center justify-center">
+                      <FileText className="w-10 h-10 text-slate-400" />
+                    </div>
+                    <p className="text-slate-600 font-medium">Preview not available for this file type</p>
+                    <a
+                      href={previewDoc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-600 transition-all shadow-lg"
+                    >
+                      Download File
+                    </a>
                   </div>
                 )}
               </div>

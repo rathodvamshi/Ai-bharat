@@ -46,17 +46,17 @@ function LoginContent() {
   const { login, user, isLoading } = useAuth();
   const deviceLayout = useDeviceLayout();
   const redirect = searchParams.get("redirect") || "/app/home";
-  
+
   // Language state - check localStorage for saved preference
   const [lang, setLang] = useState<Language>("hi");
-  
+
   useEffect(() => {
     const saved = localStorage.getItem("jan-sahayak-lang");
     if (saved === "en" || saved === "hi" || saved === "te") {
       setLang(saved);
     }
   }, []);
-  
+
   const handleLangChange = (newLang: Language) => {
     setLang(newLang);
     localStorage.setItem("jan-sahayak-lang", newLang);
@@ -73,8 +73,8 @@ function LoginContent() {
     router.push("/");
   };
 
-  const handleLogin = (phone: string) => {
-    login(phone);
+  const handleLogin = (phone: string, password?: string) => {
+    login(phone, password || "123456");
   };
 
   if (isLoading || deviceLayout === null) {
@@ -98,9 +98,9 @@ function LoginContent() {
           background: "linear-gradient(135deg, #F5FFF5 0%, #E8F5E9 100%)",
         }}
       >
-        <div 
-          style={{ 
-            width: "100%", 
+        <div
+          style={{
+            width: "100%",
             maxWidth: 440,
             maxHeight: "90vh",
             overflow: "auto",
@@ -109,9 +109,9 @@ function LoginContent() {
             background: "#fff",
           }}
         >
-          <LoginScreen 
-            onBack={handleBack} 
-            onLogin={handleLogin} 
+          <LoginScreen
+            onBack={handleBack}
+            onLogin={handleLogin}
             lang={lang}
             onLangChange={handleLangChange}
           />
@@ -123,9 +123,9 @@ function LoginContent() {
   // Mobile layout
   return (
     <div className="app-shell overflow-y-auto">
-      <LoginScreen 
-        onBack={handleBack} 
-        onLogin={handleLogin} 
+      <LoginScreen
+        onBack={handleBack}
+        onLogin={handleLogin}
         lang={lang}
         onLangChange={handleLangChange}
       />

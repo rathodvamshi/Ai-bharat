@@ -1,0 +1,1605 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-01-15",
+  "schemes": {
+    "PMKISAN": {
+      "scheme_id": "PMKISAN",
+      "scheme_name": "PM-KISAN Samman Nidhi",
+      "short_description": "₹6,000/year income support for farmer families",
+      "category": "farmer_income_support",
+      "icon": "🌾",
+      "detailed_description": "Direct income support to farmer families for meeting their needs like seeds, fertilizers, and other inputs for crop cultivation.",
+      "who_can_apply": "Indian farmers with agricultural land - Marginalized farmers (small, marginal, landless)",
+      "key_benefits": [
+        "💰 ₹6,000 per year direct income support",
+        "💳 Deposited directly into bank account in 3 installments of ₹2,000 each",
+        "📅 Direct transfers - no middlemen involved",
+        "✅ Use for seeds, fertilizers, tools & other farming inputs",
+        "🏥 Health & accident insurance coverage available through PM-KISAN+"
+      ],
+      "not_eligible": "Government employees, pensioners earning ₹10,000+/month, income tax payers, large farmers with more than 2 hectares",
+      
+      "eligibility_questions": [
+        {
+          "id": "eq_pmkisan_1",
+          "question": "Are you an Indian citizen?",
+          "question_hi": "क्या आप भारतीय नागरिक हैं?",
+          "question_te": "మీరు భారతీయ పౌరులా?",
+          "field_key": "is_citizen",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PM-KISAN is only for Indian citizens."
+        },
+        {
+          "id": "eq_pmkisan_2",
+          "question": "Do you own agricultural land in your name or your family's name?",
+          "question_hi": "क्या आपके पास खेती की ज़मीन है?",
+          "question_te": "మీ పేరు లేదా మీ కుటుంబం పేరు మీద వ్యవసాయ భూమి ఉందా?",
+          "clarification": "Land must be registered in your name or immediate family member's name (spouse/parent/child). Land records should show your name.",
+          "help_text": "Example: You own 1 acre of farmland in your name OR your father owns land and you're on deed = YES | You work on borrowed land = NO",
+          "field_key": "has_land",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PM-KISAN requires agricultural land ownership."
+        },
+        {
+          "id": "eq_pmkisan_3",
+          "question": "Are you or any family member a government employee?",
+          "question_hi": "क्या आप या परिवार का कोई सदस्य सरकारी कर्मचारी है?",
+          "question_te": "మీరు లేదా కుటుంబ సభ్యులెవరైనా ప్రభుత్వ ఉద్యోగి?",
+          "clarification": "Government employee = Works for federal, state, or local government (teacher, police, doctor in govt hospital, etc.)",
+          "help_text": "Example: You're a government teacher/police/doctor = NOT eligible | You work in private school/clinic = ELIGIBLE | Retired govt employee still drawing pension = NOT eligible",
+          "field_key": "is_govt_employee",
+          "type": "boolean",
+          "required_answer": false,
+          "rejection_message": "Government employees and their families are not eligible for PM-KISAN."
+        },
+        {
+          "id": "eq_pmkisan_4",
+          "question": "Do you pay income tax?",
+          "question_hi": "क्या आप इनकम टैक्स भरते हैं?",
+          "question_te": "మీరు ఇన్కమ్ టాక్స్ చెల్లిస్తారా?",
+          "clarification": "Income tax = Annual tax filed with government tax department (ITR return). Most farmers don't pay this.",
+          "help_text": "Example: You filed Tax Return (ITR) last year = YES, NOT eligible | You have income but don't file returns = NO, eligible for PM-KISAN",
+          "field_key": "pays_income_tax",
+          "type": "boolean",
+          "required_answer": false,
+          "rejection_message": "Income tax payers are not eligible for PM-KISAN."
+        }
+      ],
+
+      "form_fields": [
+        {
+          "id": "full_name",
+          "label": "Full Name (as per Aadhaar)",
+          "label_hi": "पूरा नाम (आधार के अनुसार)",
+          "label_te": "పూర్తి పేరు (ఆధార్ ప్రకారం)",
+          "type": "text",
+          "required": true,
+          "validation": {"min_length": 3, "max_length": 100},
+          "placeholder": "Enter your full name"
+        },
+        {
+          "id": "aadhaar_number",
+          "label": "Aadhaar Number",
+          "label_hi": "आधार नंबर",
+          "label_te": "ఆధార్ నంబర్",
+          "type": "aadhaar",
+          "required": true,
+          "validation": {"pattern": "^[0-9]{12}$"},
+          "placeholder": "12-digit Aadhaar number"
+        },
+        {
+          "id": "date_of_birth",
+          "label": "Date of Birth",
+          "label_hi": "जन्म तिथि",
+          "label_te": "పుట్టిన తేదీ",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "mobile_number",
+          "label": "Mobile Number",
+          "label_hi": "मोबाइल नंबर",
+          "label_te": "మొబైల్ నంబర్",
+          "type": "phone",
+          "required": true,
+          "validation": {"pattern": "^[6-9][0-9]{9}$"},
+          "placeholder": "10-digit mobile number"
+        },
+        {
+          "id": "bank_account_number",
+          "label": "Bank Account Number",
+          "label_hi": "बैंक खाता नंबर",
+          "label_te": "బ్యాంక్ ఖాతా నంబర్",
+          "type": "text",
+          "required": true,
+          "validation": {"min_length": 9, "max_length": 18},
+          "placeholder": "Enter bank account number"
+        },
+        {
+          "id": "ifsc_code",
+          "label": "IFSC Code",
+          "label_hi": "IFSC कोड",
+          "label_te": "IFSC కోడ్",
+          "type": "text",
+          "required": true,
+          "validation": {"pattern": "^[A-Z]{4}0[A-Z0-9]{6}$"},
+          "placeholder": "e.g., SBIN0001234"
+        },
+        {
+          "id": "state",
+          "label": "State",
+          "label_hi": "राज्य",
+          "label_te": "రాష్ట్రం",
+          "type": "select",
+          "required": true,
+          "options": ["Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu", "Maharashtra", "Gujarat", "Rajasthan", "Uttar Pradesh", "Bihar", "West Bengal", "Madhya Pradesh", "Other"]
+        },
+        {
+          "id": "district",
+          "label": "District",
+          "label_hi": "जिला",
+          "label_te": "జిల్లా",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "village",
+          "label": "Village/Town",
+          "label_hi": "गांव/कस्बा",
+          "label_te": "గ్రామం/పట్టణం",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "land_survey_number",
+          "label": "Land Survey Number",
+          "label_hi": "भूमि सर्वे नंबर",
+          "label_te": "భూమి సర్వే నంబర్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "land_area_hectares",
+          "label": "Land Area (in Hectares)",
+          "label_hi": "भूमि क्षेत्र (हेक्टेयर में)",
+          "label_te": "భూమి విస్తీర్ణం (హెక్టార్లలో)",
+          "type": "number",
+          "required": true,
+          "validation": {"min": 0.01, "max": 100}
+        }
+      ],
+
+      "required_documents": [
+        {
+          "id": "aadhaar_doc",
+          "label": "Aadhaar Card",
+          "label_hi": "आधार कार्ड",
+          "label_te": "ఆధార్ కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "land_record",
+          "label": "Land Ownership Document",
+          "label_hi": "भूमि स्वामित्व दस्तावेज",
+          "label_te": "భూమి యాజమాన్య పత్రం",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "bank_passbook",
+          "label": "Bank Passbook First Page",
+          "label_hi": "बैंक पासबुक का पहला पेज",
+          "label_te": "బ్యాంక్ పాస్ బుక్ మొదటి పేజీ",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        }
+      ]
+    },
+
+    "PMJAY": {
+      "scheme_id": "PMJAY",
+      "scheme_name": "Ayushman Bharat PM-JAY",
+      "short_description": "₹5 Lakh health insurance coverage per family per year",
+      "category": "health_insurance",
+      "icon": "🏥",
+      "detailed_description": "World's largest health insurance scheme providing free hospitalization and treatment for identified families at secondary and tertiary care institutions.",
+      "who_can_apply": "Poor and vulnerable families identified by SECC database in rural areas and unorganized sector workers in urban areas",
+      "key_benefits": [
+        "🏥 ₹5 Lakh annual health insurance per family",
+        "💊 Free hospitalization for listed diseases at 24,573 hospitals",
+        "👨‍⚕️ Cashless treatment with no out-of-pocket expenses",
+        "📋 Covers pre and post-hospitalization expenses",
+        "🚑 Free covered ambulance services on day of discharge"
+      ],
+      "not_eligible": "Families earning more than ₹10,000/month in rural areas or ₹25,000/month in urban areas, families with 4-wheelers or refrigerators, private hospital workers",
+
+      "eligibility_questions": [
+        {
+          "id": "eq_pmjay_1",
+          "question": "Are you an Indian citizen?",
+          "question_hi": "क्या आप भारतीय नागरिक हैं?",
+          "question_te": "మీరు భారతీయ పౌరులా?",
+          "field_key": "is_citizen",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PM-JAY is only for Indian citizens."
+        },
+        {
+          "id": "eq_pmjay_2",
+          "question": "Do you live in a rural or urban area?",
+          "question_hi": "आप ग्रामीण या शहरी क्षेत्र में रहते हैं?",
+          "question_te": "మీరు గ్రామీణ లేదా పట్టణ ప్రాంతంలో నివసిస్తున్నారా?",
+          "clarification": "🌾 RURAL: Villages, farms, agricultural areas, areas with sparse population | 🏙️ URBAN: Cities, towns, metropolitan areas, densely populated regions",
+          "help_text": "Examples: Rural = Small village, farm area | Urban = City, Mumbai, Delhi, Bangalore",
+          "field_key": "area_type",
+          "type": "choice",
+          "options": ["rural", "urban"],
+          "auto_fill": "area_type"
+        },
+        {
+          "id": "eq_pmjay_3",
+          "question": "What is your approximate annual family income?",
+          "question_hi": "आपकी वार्षिक पारिवारिक आय लगभग कितनी है?",
+          "question_te": "మీ వార్షిక కుటుంబ ఆదాయం సుమారుగా ఎంత?",
+          "clarification": "Include all income sources: salary, agriculture, business, daily wages combined for all family members in a YEAR",
+          "help_text": "Example: If father earns ₹5,000/month + mother earns ₹2,500/month = ₹7,500/month × 12 = ₹90,000/year (Below ₹1 Lakh) | If combined = ₹15,000/month × 12 = ₹1,80,000/year (₹1-2 Lakh)",
+          "field_key": "annual_income",
+          "type": "income_range",
+          "options": ["Below ₹1 Lakh", "₹1-2 Lakh", "₹2-3 Lakh", "Above ₹3 Lakh"],
+          "auto_fill": "annual_income"
+        },
+        {
+          "id": "eq_pmjay_4",
+          "question": "Do you have a ration card (BPL/Antyodaya)?",
+          "question_hi": "क्या आपके पास राशन कार्ड (BPL/अंत्योदय) है?",
+          "question_te": "మీకు రేషన్ కార్డు (BPL/అంత్యోదయ) ఉందా?",
+          "clarification": "BPL = Below Poverty Line (for poor families) | Antyodaya = Poorest of the poor families. These are govt ration cards issued to low-income families.",
+          "help_text": "Example: You get subsidized rice/wheat from the government = You likely have this card. Check your government ration certificate.",
+          "field_key": "has_ration_card",
+          "type": "boolean"
+        },
+        {
+          "id": "eq_pmjay_5",
+          "question": "What is your occupation?",
+          "question_hi": "आपका व्यवसाय क्या है?",
+          "question_te": "మీ వృత్తి ఏమిటి?",
+          "help_text": "Examples:\n🌾 Farmer = Grows crops, cultivates land\n💼 Daily wage laborer = Works without fixed salary, gets paid daily (construction sites, farms)\n🛒 Street vendor = Sells goods in market/street (vegetables, clothes, snacks)\n🏠 Domestic worker = Works in homes as domestic help\n🏗️ Construction worker = Works in building sites\n🏪 Small trader = Owns small shop or business",
+          "field_key": "occupation",
+          "type": "choice",
+          "options": ["Farmer", "Daily wage laborer", "Street vendor", "Domestic worker", "Construction worker", "Small trader", "Other"],
+          "auto_fill": "occupation"
+        }
+      ],
+
+      "form_fields": [
+        {
+          "id": "full_name",
+          "label": "Full Name (as per Aadhaar)",
+          "label_hi": "पूरा नाम (आधार के अनुसार)",
+          "label_te": "పూర్తి పేరు (ఆధార్ ప్రకారం)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "aadhaar_number",
+          "label": "Aadhaar Number",
+          "label_hi": "आधार नंबर",
+          "label_te": "ఆధార్ నంబర్",
+          "type": "aadhaar",
+          "required": true,
+          "validation": {"pattern": "^[0-9]{12}$"}
+        },
+        {
+          "id": "mobile_number",
+          "label": "Mobile Number",
+          "label_hi": "मोबाइल नंबर",
+          "label_te": "మొబైల్ నంబర్",
+          "type": "phone",
+          "required": true
+        },
+        {
+          "id": "date_of_birth",
+          "label": "Date of Birth",
+          "label_hi": "जन्म तिथि",
+          "label_te": "పుట్టిన తేదీ",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "area_type",
+          "label": "Area Type",
+          "label_hi": "क्षेत्र प्रकार",
+          "label_te": "ప్రాంతం రకం",
+          "type": "select",
+          "required": true,
+          "options": ["Rural", "Urban"],
+          "auto_fill_from": "eq_pmjay_2"
+        },
+        {
+          "id": "occupation",
+          "label": "Occupation",
+          "label_hi": "व्यवसाय",
+          "label_te": "వృత్తి",
+          "type": "select",
+          "required": true,
+          "options": ["Farmer", "Daily wage laborer", "Street vendor", "Domestic worker", "Construction worker", "Small trader", "Other"],
+          "auto_fill_from": "eq_pmjay_5"
+        },
+        {
+          "id": "annual_income",
+          "label": "Annual Household Income",
+          "label_hi": "वार्षिक घरेलू आय",
+          "label_te": "వార్షిక గృహ ఆదాయం",
+          "type": "select",
+          "required": true,
+          "options": ["Below ₹1 Lakh", "₹1-2 Lakh", "₹2-3 Lakh", "Above ₹3 Lakh"],
+          "auto_fill_from": "eq_pmjay_3"
+        },
+        {
+          "id": "family_members",
+          "label": "Number of Family Members",
+          "label_hi": "परिवार के सदस्यों की संख्या",
+          "label_te": "కుటుంబ సభ్యుల సంఖ్య",
+          "type": "number",
+          "required": true,
+          "validation": {"min": 1, "max": 15}
+        },
+        {
+          "id": "ration_card_number",
+          "label": "Ration Card Number (if available)",
+          "label_hi": "राशन कार्ड नंबर (यदि उपलब्ध हो)",
+          "label_te": "రేషన్ కార్డ్ నంబర్ (అందుబాటులో ఉంటే)",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "state",
+          "label": "State",
+          "label_hi": "राज्य",
+          "label_te": "రాష్ట్రం",
+          "type": "select",
+          "required": true,
+          "options": ["Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu", "Maharashtra", "Gujarat", "Rajasthan", "Uttar Pradesh", "Bihar", "West Bengal", "Madhya Pradesh", "Other"]
+        },
+        {
+          "id": "district",
+          "label": "District",
+          "label_hi": "जिला",
+          "label_te": "జిల్లా",
+          "type": "text",
+          "required": true
+        }
+      ],
+
+      "required_documents": [
+        {
+          "id": "aadhaar_doc",
+          "label": "Aadhaar Card",
+          "label_hi": "आधार कार्ड",
+          "label_te": "ఆధార్ కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "ration_card",
+          "label": "Ration Card (BPL/Antyodaya)",
+          "label_hi": "राशन कार्ड",
+          "label_te": "రేషన్ కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": false
+        },
+        {
+          "id": "income_certificate",
+          "label": "Income Certificate",
+          "label_hi": "आय प्रमाण पत्र",
+          "label_te": "ఆదాయ ధృవీకరణ పత్రం",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": false
+        }
+      ]
+    },
+
+    "PMAYU": {
+      "scheme_id": "PMAYU",
+      "scheme_name": "Pradhan Mantri Awas Yojana (Urban)",
+      "short_description": "Affordable housing subsidy for EWS/LIG/MIG families",
+      "category": "housing",
+      "icon": "🏠",
+      "detailed_description": "Provides subsidy for construction or purchase of houses for economically weaker sections, lower income groups, and middle income groups with loans at affordable rates.",
+      "who_can_apply": "Economically Weaker Sections (EWS), Lower Income Group (LIG), and Middle Income Group (MIG) citizens without a pucca house",
+      "key_benefits": [
+        "🏠 Interest subsidy up to ₹2.67 Lakh - ₹9 Lakh depending on category",
+        "💰 Affordable housing in urban areas near employment centers",
+        "📋 Easy loan eligibility for home purchase or construction",
+        "✅ Priority for women beneficiaries",
+        "📑 Transparent allocation process"
+      ],
+      "not_eligible": "Families with annual income more than ₹27 Lakh, families with pucca houses, non-Indian citizens",
+
+      "eligibility_questions": [
+        {
+          "id": "eq_pmayu_1",
+          "question": "Are you an Indian citizen?",
+          "question_hi": "क्या आप भारतीय नागरिक हैं?",
+          "question_te": "మీరు భారతీయ పౌరులా?",
+          "field_key": "is_citizen",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PMAY is only for Indian citizens."
+        },
+        {
+          "id": "eq_pmayu_2",
+          "question": "Do you or any family member already own a pucca house anywhere in India?",
+          "question_hi": "क्या आप या परिवार का कोई सदस्य भारत में पक्का घर रखते हैं?",
+          "question_te": "మీరు లేదా కుటుంబ సభ్యులెవరైనా భారతదేశంలో ఎక్కడైనా పక్కా ఇల్లు కలిగి ఉన్నారా?",
+          "field_key": "owns_pucca_house",
+          "type": "boolean",
+          "required_answer": false,
+          "rejection_message": "Families already owning a pucca house are not eligible for PMAY."
+        },
+        {
+          "id": "eq_pmayu_3",
+          "question": "What is your annual household income?",
+          "question_hi": "आपकी वार्षिक घरेलू आय कितनी है?",
+          "question_te": "మీ వార్షిక గృహ ఆదాయం ఎంత?",
+          "field_key": "annual_income",
+          "type": "income_range",
+          "options": ["Up to ₹3 Lakh (EWS)", "₹3-6 Lakh (LIG)", "₹6-12 Lakh (MIG-I)", "₹12-18 Lakh (MIG-II)", "Above ₹18 Lakh"],
+          "auto_fill": "income_category"
+        },
+        {
+          "id": "eq_pmayu_4",
+          "question": "Have you availed any central government housing scheme benefit before?",
+          "question_hi": "क्या आपने पहले किसी केंद्रीय आवास योजना का लाभ लिया है?",
+          "question_te": "మీరు ఇంతకు ముందు ఏదైనా కేంద్ర ప్రభుత్వ గృహ పథకం ప్రయోజనం పొందారా?",
+          "field_key": "availed_housing_benefit",
+          "type": "boolean",
+          "required_answer": false,
+          "rejection_message": "Families who have already availed central housing scheme benefits are not eligible."
+        }
+      ],
+
+      "form_fields": [
+        {
+          "id": "full_name",
+          "label": "Full Name",
+          "label_hi": "पूरा नाम",
+          "label_te": "పూర్తి పేరు",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "aadhaar_number",
+          "label": "Aadhaar Number",
+          "label_hi": "आधार नंबर",
+          "label_te": "ఆధార్ నంబర్",
+          "type": "aadhaar",
+          "required": true,
+          "validation": {"pattern": "^[0-9]{12}$"}
+        },
+        {
+          "id": "mobile_number",
+          "label": "Mobile Number",
+          "label_hi": "मोबाइल नंबर",
+          "label_te": "మొబైల్ నంబర్",
+          "type": "phone",
+          "required": true
+        },
+        {
+          "id": "date_of_birth",
+          "label": "Date of Birth",
+          "label_hi": "जन्म तिथि",
+          "label_te": "పుట్టిన తేదీ",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "annual_household_income",
+          "label": "Annual Household Income",
+          "label_hi": "वार्षिक घरेलू आय",
+          "label_te": "వార్షిక గృహ ఆదాయం",
+          "type": "select",
+          "required": true,
+          "options": ["Up to ₹3 Lakh (EWS)", "₹3-6 Lakh (LIG)", "₹6-12 Lakh (MIG-I)", "₹12-18 Lakh (MIG-II)"],
+          "auto_fill_from": "eq_pmayu_3"
+        },
+        {
+          "id": "family_members",
+          "label": "Number of Family Members",
+          "label_hi": "परिवार के सदस्यों की संख्या",
+          "label_te": "కుటుంబ సభ్యుల సంఖ్య",
+          "type": "number",
+          "required": true
+        },
+        {
+          "id": "state",
+          "label": "State",
+          "label_hi": "राज्य",
+          "label_te": "రాష్ట్రం",
+          "type": "select",
+          "required": true,
+          "options": ["Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu", "Maharashtra", "Gujarat", "Rajasthan", "Uttar Pradesh", "Bihar", "West Bengal", "Madhya Pradesh", "Other"]
+        },
+        {
+          "id": "district",
+          "label": "District",
+          "label_hi": "जिला",
+          "label_te": "జిల్లా",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "property_type",
+          "label": "Type of Property Needed",
+          "label_hi": "आवश्यक संपत्ति का प्रकार",
+          "label_te": "అవసరమైన ఆస్తి రకం",
+          "type": "select",
+          "required": true,
+          "options": ["New Construction", "Enhancement of existing kutcha house", "Beneficiary-led construction"]
+        },
+        {
+          "id": "bank_account_number",
+          "label": "Bank Account Number",
+          "label_hi": "बैंक खाता नंबर",
+          "label_te": "బ్యాంక్ ఖాతా నంబర్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "ifsc_code",
+          "label": "IFSC Code",
+          "label_hi": "IFSC कोड",
+          "label_te": "IFSC కోడ్",
+          "type": "text",
+          "required": true,
+          "validation": {"pattern": "^[A-Z]{4}0[A-Z0-9]{6}$"}
+        }
+      ],
+
+      "required_documents": [
+        {
+          "id": "aadhaar_doc",
+          "label": "Aadhaar Card",
+          "label_hi": "आधार कार्ड",
+          "label_te": "ఆధార్ కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "income_certificate",
+          "label": "Income Certificate",
+          "label_hi": "आय प्रमाण पत्र",
+          "label_te": "ఆదాయ ధృవీకరణ పత్రం",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "bank_passbook",
+          "label": "Bank Passbook First Page",
+          "label_hi": "बैंक पासबुक का पहला पेज",
+          "label_te": "బ్యాంక్ పాస్ బుక్ మొదటి పేజీ",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "affidavit",
+          "label": "Affidavit (No pucca house ownership)",
+          "label_hi": "शपथ पत्र (कोई पक्का घर नहीं)",
+          "label_te": "అఫిడవిట్ (పక్కా ఇల్లు లేదు)",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        }
+      ]
+    },
+
+    "KCC": {
+      "scheme_id": "KCC",
+      "scheme_name": "Kisan Credit Card",
+      "short_description": "Agricultural credit up to ₹3 Lakh at subsidized rates",
+      "category": "agricultural_credit",
+      "icon": "🚜",
+      "detailed_description": "Provides short-term agricultural credit to farmers for meeting credit requirements for cultivation, maintenance of farm assets, and related farming activities.",
+      "who_can_apply": "Individual farmers owning agricultural land, tenant farmers, share croppers with minimum ₹2,000 annual income from farming",
+      "key_benefits": [
+        "💳 Revolving credit up to ₹3 Lakh for varying seasons",
+        "📊 Interest subsidy of 3% on agricultural loans",
+        "⏰ Flexible repayment with seasonal income patterns",
+        "🛡️ Crop insurance coverage included",
+        "✅ Simplified documentation and quick processing"
+      ],
+      "not_eligible": "Non-agricultural land owners, farmers with outstanding agricultural debt exceeding ₹5 Lakh, those with poor credit history",
+
+      "eligibility_questions": [
+        {
+          "id": "eq_kcc_1",
+          "question": "Are you engaged in farming, fisheries, or animal husbandry?",
+          "question_hi": "क्या आप खेती, मछली पालन या पशुपालन में लगे हैं?",
+          "question_te": "మీరు వ్యవసాయం, మత్స్య పరిశ్రమ లేదా పశుపోషణలో నిమగ్నమై ఉన్నారా?",
+          "field_key": "is_farmer",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "KCC is only for farmers, fishermen, or animal husbandry practitioners."
+        },
+        {
+          "id": "eq_kcc_2",
+          "question": "What type of farmer are you?",
+          "question_hi": "आप किस प्रकार के किसान हैं?",
+          "question_te": "మీరు ఏ రకమైన రైతు?",
+          "field_key": "farmer_category",
+          "type": "choice",
+          "options": ["Owner farmer", "Tenant farmer", "Sharecropper", "Self-help group member", "Joint liability group member"],
+          "auto_fill": "farmer_category"
+        },
+        {
+          "id": "eq_kcc_3",
+          "question": "Do you have existing bank loans that are unpaid/defaulted?",
+          "question_hi": "क्या आपके पास बकाया/डिफॉल्ट बैंक लोन है?",
+          "question_te": "మీకు చెల్లించని/డిఫాల్ట్ అయిన బ్యాంక్ రుణాలు ఉన్నాయా?",
+          "field_key": "is_defaulter",
+          "type": "boolean",
+          "required_answer": false,
+          "rejection_message": "Loan defaulters may face difficulty in KCC approval. Please clear existing dues first."
+        }
+      ],
+
+      "form_fields": [
+        {
+          "id": "full_name",
+          "label": "Full Name",
+          "label_hi": "पूरा नाम",
+          "label_te": "పూర్తి పేరు",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "aadhaar_number",
+          "label": "Aadhaar Number",
+          "label_hi": "आधार नंबर",
+          "label_te": "ఆధార్ నంబర్",
+          "type": "aadhaar",
+          "required": true,
+          "validation": {"pattern": "^[0-9]{12}$"}
+        },
+        {
+          "id": "mobile_number",
+          "label": "Mobile Number",
+          "label_hi": "मोबाइल नंबर",
+          "label_te": "మొబైల్ నంబర్",
+          "type": "phone",
+          "required": true
+        },
+        {
+          "id": "state",
+          "label": "State",
+          "label_hi": "राज्य",
+          "label_te": "రాష్ట్రం",
+          "type": "select",
+          "required": true,
+          "options": ["Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu", "Maharashtra", "Gujarat", "Rajasthan", "Uttar Pradesh", "Bihar", "West Bengal", "Madhya Pradesh", "Other"]
+        },
+        {
+          "id": "district",
+          "label": "District",
+          "label_hi": "जिला",
+          "label_te": "జిల్లా",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "farmer_category",
+          "label": "Farmer Category",
+          "label_hi": "किसान श्रेणी",
+          "label_te": "రైతు వర్గం",
+          "type": "select",
+          "required": true,
+          "options": ["Owner farmer", "Tenant farmer", "Sharecropper", "Self-help group member", "Joint liability group member"],
+          "auto_fill_from": "eq_kcc_2"
+        },
+        {
+          "id": "cropping_pattern",
+          "label": "Main Crops Grown",
+          "label_hi": "मुख्य फसलें",
+          "label_te": "ప్రధాన పంటలు",
+          "type": "text",
+          "required": true,
+          "placeholder": "e.g., Rice, Wheat, Cotton"
+        },
+        {
+          "id": "land_area_acres",
+          "label": "Total Land Area (in Acres)",
+          "label_hi": "कुल भूमि क्षेत्र (एकड़ में)",
+          "label_te": "మొత్తం భూమి విస్తీర్ణం (ఎకరాలలో)",
+          "type": "number",
+          "required": true,
+          "validation": {"min": 0.1, "max": 500}
+        },
+        {
+          "id": "loan_amount_required",
+          "label": "Loan Amount Required (₹)",
+          "label_hi": "आवश्यक ऋण राशि (₹)",
+          "label_te": "అవసరమైన రుణ మొత్తం (₹)",
+          "type": "number",
+          "required": true,
+          "validation": {"min": 10000, "max": 300000}
+        },
+        {
+          "id": "bank_account_number",
+          "label": "Bank Account Number",
+          "label_hi": "बैंक खाता नंबर",
+          "label_te": "బ్యాంక్ ఖాతా నంబర్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "ifsc_code",
+          "label": "IFSC Code",
+          "label_hi": "IFSC कोड",
+          "label_te": "IFSC కोడ్",
+          "type": "text",
+          "required": true
+        }
+      ],
+
+      "required_documents": [
+        {
+          "id": "aadhaar_doc",
+          "label": "Aadhaar Card",
+          "label_hi": "आधार कार्ड",
+          "label_te": "ఆధార్ కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "land_record",
+          "label": "Land Record / Pattadar Passbook",
+          "label_hi": "भूमि अभिलेख / पट्टादार पासबुक",
+          "label_te": "భూమి రికార్డ్ / పట్టాదారు పాస్ బుక్",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "photo",
+          "label": "Passport Size Photo",
+          "label_hi": "पासपोर्ट साइज फोटो",
+          "label_te": "పాస్‌పోర్ట్ సైజ్ ఫోటో",
+          "type": "file",
+          "accept": ".jpg,.jpeg,.png",
+          "required": true
+        }
+      ]
+    },
+
+    "APY": {
+      "scheme_id": "APY",
+      "scheme_name": "Atal Pension Yojana",
+      "short_description": "Guaranteed monthly pension of ₹1,000 - ₹5,000 for retirement",
+      "category": "pension",
+      "icon": "🏧",
+      "detailed_description": "Ensures old-age income security by providing guaranteed monthly pension with government co-contribution of 50% of the contribution during first 5 years.",
+      "who_can_apply": "Indian citizens aged 18-40 years with a bank account and Aadhaar, especially unorganized sector workers",
+      "key_benefits": [
+        "🏧 Guaranteed monthly pension from ₹1,000 to ₹5,000 after age 60",
+        "👨‍👩‍👧 Family pension available for spouse after subscriber's death",
+        "🤝 50% government co-contribution in first 5 years",
+        "💳 Automatic enrollment and easy bank account linkage",
+        "✅ Portable across states and employers"
+      ],
+      "not_eligible": "Individuals earning more than threshold income limit, those already in any government pension scheme, non-bank account holders",
+
+      "eligibility_questions": [
+        {
+          "id": "eq_apy_1",
+          "question": "Are you an Indian citizen?",
+          "question_hi": "क्या आप भारतीय नागरिक हैं?",
+          "question_te": "మీరు భారతీయ పౌరులా?",
+          "field_key": "is_citizen",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "APY is only for Indian citizens."
+        },
+        {
+          "id": "eq_apy_2",
+          "question": "What is your age?",
+          "question_hi": "आपकी उम्र क्या है?",
+          "question_te": "మీ వయస్సు ఎంత?",
+          "field_key": "age",
+          "type": "number",
+          "validation": {"min": 18, "max": 40},
+          "auto_fill": "age",
+          "rejection_condition": {"operator": "outside_range", "min": 18, "max": 40},
+          "rejection_message": "APY is only for people aged 18-40 years."
+        },
+        {
+          "id": "eq_apy_3",
+          "question": "Do you have a savings bank account?",
+          "question_hi": "क्या आपके पास बचत बैंक खाता है?",
+          "question_te": "మీకు పొదుపు బ్యాంక్ ఖాతా ఉందా?",
+          "field_key": "has_bank_account",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "APY requires a savings bank account for auto-debit contributions."
+        },
+        {
+          "id": "eq_apy_4",
+          "question": "Do you pay income tax?",
+          "question_hi": "क्या आप इनकम टैक्स भरते हैं?",
+          "question_te": "మీరు ఇన్కమ్ టాక్స్ చెల్లిస్తారా?",
+          "field_key": "pays_income_tax",
+          "type": "boolean",
+          "required_answer": false,
+          "rejection_message": "Income tax payers are not eligible for APY."
+        },
+        {
+          "id": "eq_apy_5",
+          "question": "How much pension do you want per month after age 60?",
+          "question_hi": "60 वर्ष के बाद आपको प्रति माह कितनी पेंशन चाहिए?",
+          "question_te": "60 సంవత్సరాల తర్వాత నెలకు మీకు ఎంత పెన్షన్ కావాలి?",
+          "field_key": "selected_pension",
+          "type": "choice",
+          "options": ["₹1,000/month", "₹2,000/month", "₹3,000/month", "₹4,000/month", "₹5,000/month"],
+          "auto_fill": "selected_pension_amount"
+        }
+      ],
+
+      "form_fields": [
+        {
+          "id": "full_name",
+          "label": "Full Name",
+          "label_hi": "पूरा नाम",
+          "label_te": "పూర్తి పేరు",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "date_of_birth",
+          "label": "Date of Birth",
+          "label_hi": "जन्म तिथि",
+          "label_te": "పుట్టిన తేదీ",
+          "type": "date",
+          "required": true
+        },
+        {
+          "id": "age",
+          "label": "Age",
+          "label_hi": "उम्र",
+          "label_te": "వయస్సు",
+          "type": "number",
+          "required": true,
+          "auto_fill_from": "eq_apy_2"
+        },
+        {
+          "id": "mobile_number",
+          "label": "Mobile Number",
+          "label_hi": "मोबाइल नंबर",
+          "label_te": "మొబైల్ నంబర్",
+          "type": "phone",
+          "required": true
+        },
+        {
+          "id": "aadhaar_number",
+          "label": "Aadhaar Number",
+          "label_hi": "आधार नंबर",
+          "label_te": "ఆధార్ నంబర్",
+          "type": "aadhaar",
+          "required": true,
+          "validation": {"pattern": "^[0-9]{12}$"}
+        },
+        {
+          "id": "bank_account_number",
+          "label": "Savings Bank Account Number",
+          "label_hi": "बचत बैंक खाता नंबर",
+          "label_te": "పొదుపు బ్యాంక్ ఖాతా నంబర్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "ifsc_code",
+          "label": "IFSC Code",
+          "label_hi": "IFSC कोड",
+          "label_te": "IFSC కోడ్",
+          "type": "text",
+          "required": true,
+          "validation": {"pattern": "^[A-Z]{4}0[A-Z0-9]{6}$"}
+        },
+        {
+          "id": "nominee_name",
+          "label": "Nominee Name",
+          "label_hi": "नॉमिनी का नाम",
+          "label_te": "నామినీ పేరు",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "nominee_relationship",
+          "label": "Relationship with Nominee",
+          "label_hi": "नॉमिनी के साथ संबंध",
+          "label_te": "నామినీతో సంబంధం",
+          "type": "select",
+          "required": true,
+          "options": ["Spouse", "Son", "Daughter", "Father", "Mother", "Other"]
+        },
+        {
+          "id": "selected_pension_amount",
+          "label": "Selected Pension Amount",
+          "label_hi": "चयनित पेंशन राशि",
+          "label_te": "ఎంచుకున్న పెన్షన్ మొత్తం",
+          "type": "select",
+          "required": true,
+          "options": ["₹1,000/month", "₹2,000/month", "₹3,000/month", "₹4,000/month", "₹5,000/month"],
+          "auto_fill_from": "eq_apy_5"
+        },
+        {
+          "id": "contribution_frequency",
+          "label": "Contribution Frequency",
+          "label_hi": "योगदान आवृत्ति",
+          "label_te": "కంట్రిబ్యూషన్ ఫ్రీక్వెన్సీ",
+          "type": "select",
+          "required": true,
+          "options": ["Monthly", "Quarterly", "Half-yearly"]
+        }
+      ],
+
+      "required_documents": [
+        {
+          "id": "aadhaar_doc",
+          "label": "Aadhaar Card",
+          "label_hi": "आधार कार्ड",
+          "label_te": "ఆధార్ కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "bank_passbook",
+          "label": "Bank Passbook First Page",
+          "label_hi": "बैंक पासबुक का पहला पेज",
+          "label_te": "బ్యాంక్ పాస్ బుక్ మొదటి పేజీ",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        }
+      ]
+    },
+
+    "PMFBY": {
+      "scheme_id": "PMFBY",
+      "scheme_name": "Pradhan Mantri Fasal Bima Yojana",
+      "short_description": "Crop insurance covering ₹0 to ₹200+ Lakh in losses",
+      "category": "crop_insurance",
+      "icon": "🌾",
+      "detailed_description": "Provides comprehensive crop insurance against loss due to natural calamities, pests, and diseases at minimal premiums, ensuring farmer income stabilization.",
+      "who_can_apply": "Farmers cultivating notified crops with land ownership documents or tenancy agreements",
+      "key_benefits": [
+        "🛡️ Full loss coverage for notified crops at minimal premium",
+        "📉 Covers yield losses due to drought, flood, hail, and pest attacks",
+        "💰 Quick settlement of claims within 60 days",
+        "🌾 Coverage for crops like rice, wheat, cotton, pulses, and vegetables",
+        "✅ Loan approval enabled with crop insurance coverage"
+      ],
+      "not_eligible": "Non-farmers, cultivators without land records, farmers with outstanding agricultural loans above scheme limits",
+
+      "eligibility_questions": [
+        {
+          "id": "eq_pmfby_1",
+          "question": "Are you a farmer (owner, tenant, or sharecropper)?",
+          "question_hi": "क्या आप किसान हैं (मालिक, किराएदार, या बटाईदार)?",
+          "question_te": "మీరు రైతు (యజమాని, కౌలుదారు, లేదా వాటాదారు)?",
+          "field_key": "is_farmer",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PMFBY is only for farmers."
+        },
+        {
+          "id": "eq_pmfby_2",
+          "question": "What type of farmer are you?",
+          "question_hi": "आप किस प्रकार के किसान हैं?",
+          "question_te": "మీరు ఏ రకమైన రైతు?",
+          "field_key": "farmer_type",
+          "type": "choice",
+          "options": ["Owner farmer", "Tenant farmer", "Sharecropper"],
+          "auto_fill": "farmer_type"
+        },
+        {
+          "id": "eq_pmfby_3",
+          "question": "Are you growing a notified crop in a notified area?",
+          "question_hi": "क्या आप अधिसूचित क्षेत्र में अधिसूचित फसल उगा रहे हैं?",
+          "question_te": "మీరు నోటిఫైడ్ ఏరియాలో నోటిఫైడ్ పంట పండిస్తున్నారా?",
+          "field_key": "notified_crop_area",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PMFBY only covers notified crops in notified areas."
+        },
+        {
+          "id": "eq_pmfby_4",
+          "question": "Which crop season are you insuring?",
+          "question_hi": "आप किस फसल मौसम का बीमा करा रहे हैं?",
+          "question_te": "మీరు ఏ పంట సీజన్‌కు భీమా చేస్తున్నారు?",
+          "field_key": "crop_season",
+          "type": "choice",
+          "options": ["Kharif (June-October)", "Rabi (October-March)", "Commercial/Horticulture"],
+          "auto_fill": "crop_season"
+        }
+      ],
+
+      "form_fields": [
+        {
+          "id": "full_name",
+          "label": "Full Name",
+          "label_hi": "पूरा नाम",
+          "label_te": "పూర్తి పేరు",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "mobile_number",
+          "label": "Mobile Number",
+          "label_hi": "मोबाइल नंबर",
+          "label_te": "మొబైల్ నంబర్",
+          "type": "phone",
+          "required": true
+        },
+        {
+          "id": "aadhaar_number",
+          "label": "Aadhaar Number",
+          "label_hi": "आधार नंबर",
+          "label_te": "ఆధార్ నంబర్",
+          "type": "aadhaar",
+          "required": true,
+          "validation": {"pattern": "^[0-9]{12}$"}
+        },
+        {
+          "id": "state",
+          "label": "State",
+          "label_hi": "राज्य",
+          "label_te": "రాష్ట్రం",
+          "type": "select",
+          "required": true,
+          "options": ["Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu", "Maharashtra", "Gujarat", "Rajasthan", "Uttar Pradesh", "Bihar", "West Bengal", "Madhya Pradesh", "Other"]
+        },
+        {
+          "id": "district",
+          "label": "District",
+          "label_hi": "जिला",
+          "label_te": "జిల్లా",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "village",
+          "label": "Village",
+          "label_hi": "गांव",
+          "label_te": "గ్రామం",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "farmer_type",
+          "label": "Farmer Type",
+          "label_hi": "किसान प्रकार",
+          "label_te": "రైతు రకం",
+          "type": "select",
+          "required": true,
+          "options": ["Owner farmer", "Tenant farmer", "Sharecropper"],
+          "auto_fill_from": "eq_pmfby_2"
+        },
+        {
+          "id": "crop_type",
+          "label": "Crop Name",
+          "label_hi": "फसल का नाम",
+          "label_te": "పంట పేరు",
+          "type": "text",
+          "required": true,
+          "placeholder": "e.g., Rice, Wheat, Cotton, Groundnut"
+        },
+        {
+          "id": "crop_season",
+          "label": "Crop Season",
+          "label_hi": "फसल मौसम",
+          "label_te": "పంట సీజన్",
+          "type": "select",
+          "required": true,
+          "options": ["Kharif", "Rabi", "Commercial/Horticulture"],
+          "auto_fill_from": "eq_pmfby_4"
+        },
+        {
+          "id": "land_area_hectares",
+          "label": "Land Area (in Hectares)",
+          "label_hi": "भूमि क्षेत्र (हेक्टेयर में)",
+          "label_te": "భూమి విస్తీర్ణం (హెక్టార్లలో)",
+          "type": "number",
+          "required": true,
+          "validation": {"min": 0.1, "max": 100}
+        },
+        {
+          "id": "bank_account_number",
+          "label": "Bank Account Number",
+          "label_hi": "बैंक खाता नंबर",
+          "label_te": "బ్యాంక్ ఖాతా నంబర్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "ifsc_code",
+          "label": "IFSC Code",
+          "label_hi": "IFSC कोड",
+          "label_te": "IFSC కోడ్",
+          "type": "text",
+          "required": true
+        }
+      ],
+
+      "required_documents": [
+        {
+          "id": "aadhaar_doc",
+          "label": "Aadhaar Card",
+          "label_hi": "आधार कार्ड",
+          "label_te": "ఆధార్ కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "land_record",
+          "label": "Land Record / Possession Certificate",
+          "label_hi": "भूमि अभिलेख / कब्जा प्रमाण पत्र",
+          "label_te": "భూమి రికార్డ్ / స్వాధీనం సర్టిఫికేట్",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "bank_passbook",
+          "label": "Bank Passbook",
+          "label_hi": "बैंक पासबुक",
+          "label_te": "బ్యాంక్ పాస్ బుక్",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "sowing_declaration",
+          "label": "Crop Sowing Declaration",
+          "label_hi": "फसल बुवाई घोषणा",
+          "label_te": "పంట విత్తన ప్రకటన",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        }
+      ]
+    },
+
+    "PMMY": {
+      "scheme_id": "PMMY",
+      "scheme_name": "Pradhan Mantri Mudra Yojana",
+      "short_description": "Collateral-free micro loans up to ₹10 Lakh",
+      "category": "micro_credit",
+      "icon": "💼",
+      "detailed_description": "Provides collateral-free micro loans to non-corporate, non-farm small and micro enterprises for startups and expansion of existing businesses.",
+      "who_can_apply": "Entrepreneurs, self-employed individuals, MSMEs, traders, and startups without access to conventional bank credit",
+      "key_benefits": [
+        "💳 Collateral-free loans up to ₹10 Lakh in 3 categories (Shishu, Kishore, Tarun)",
+        "🚀 Quick approval within 7 days for eligible applicants",
+        "📋 Minimal documentation requirements",
+        "✅ Flexible repayment based on business cash flow",
+        "🎯 Available for new and existing business ventures"
+      ],
+      "not_eligible": "Large enterprises earning more than specified thresholds, borrowers with existing loans from formal banking, fraudulent applicants",
+
+      "eligibility_questions": [
+        {
+          "id": "eq_pmmy_1",
+          "question": "Are you an Indian citizen?",
+          "question_hi": "क्या आप भारतीय नागरिक हैं?",
+          "question_te": "మీరు భారతీయ పౌరులా?",
+          "field_key": "is_citizen",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "MUDRA loans are only for Indian citizens."
+        },
+        {
+          "id": "eq_pmmy_2",
+          "question": "Do you have a non-farm income generating business or plan to start one?",
+          "question_hi": "क्या आपका कोई गैर-कृषि व्यवसाय है या शुरू करने की योजना है?",
+          "question_te": "మీకు నాన్-ఫార్మ్ ఆదాయ వ్యాపారం ఉందా లేదా ప్రారంభించాలని ప్లాన్ చేస్తున్నారా?",
+          "field_key": "has_business",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "MUDRA is for non-farm business activities only."
+        },
+        {
+          "id": "eq_pmmy_3",
+          "question": "What type of business do you have or plan to start?",
+          "question_hi": "आपका व्यवसाय किस प्रकार का है या शुरू करने की योजना है?",
+          "question_te": "మీ వ్యాపారం ఏ రకం లేదా ప్రారంభించాలని ప్లాన్ చేస్తున్నారు?",
+          "field_key": "business_type",
+          "type": "choice",
+          "options": ["Manufacturing", "Trading", "Services", "Transport", "Food Processing", "Other"],
+          "auto_fill": "business_type"
+        },
+        {
+          "id": "eq_pmmy_4",
+          "question": "Have you defaulted on any bank loan?",
+          "question_hi": "क्या आप किसी बैंक लोन में डिफॉल्ट हुए हैं?",
+          "question_te": "మీరు ఏదైనా బ్యాంక్ లోన్‌లో డిఫాల్ట్ అయ్యారా?",
+          "field_key": "is_defaulter",
+          "type": "boolean",
+          "required_answer": false,
+          "rejection_message": "Bank defaulters are not eligible for MUDRA loans."
+        },
+        {
+          "id": "eq_pmmy_5",
+          "question": "How much loan do you need?",
+          "question_hi": "आपको कितना लोन चाहिए?",
+          "question_te": "మీకు ఎంత లోన్ కావాలి?",
+          "field_key": "loan_category",
+          "type": "choice",
+          "options": ["Up to ₹50,000 (Shishu)", "₹50,000 - ₹5 Lakh (Kishore)", "₹5 Lakh - ₹10 Lakh (Tarun)", "₹10 Lakh - ₹20 Lakh (Tarun Plus)"],
+          "auto_fill": "loan_category"
+        }
+      ],
+
+      "form_fields": [
+        {
+          "id": "full_name",
+          "label": "Full Name",
+          "label_hi": "पूरा नाम",
+          "label_te": "పూర్తి పేరు",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "mobile_number",
+          "label": "Mobile Number",
+          "label_hi": "मोबाइल नंबर",
+          "label_te": "మొబైల్ నంబర్",
+          "type": "phone",
+          "required": true
+        },
+        {
+          "id": "aadhaar_number",
+          "label": "Aadhaar Number",
+          "label_hi": "आधार नंबर",
+          "label_te": "ఆధార్ నంబర్",
+          "type": "aadhaar",
+          "required": true,
+          "validation": {"pattern": "^[0-9]{12}$"}
+        },
+        {
+          "id": "business_type",
+          "label": "Business Type",
+          "label_hi": "व्यवसाय प्रकार",
+          "label_te": "వ్యాపార రకం",
+          "type": "select",
+          "required": true,
+          "options": ["Manufacturing", "Trading", "Services", "Transport", "Food Processing", "Other"],
+          "auto_fill_from": "eq_pmmy_3"
+        },
+        {
+          "id": "business_activity",
+          "label": "Business Activity Description",
+          "label_hi": "व्यवसाय गतिविधि विवरण",
+          "label_te": "వ్యాపార కార్యకలాపం వివరణ",
+          "type": "textarea",
+          "required": true,
+          "placeholder": "Describe your business activity"
+        },
+        {
+          "id": "loan_amount_required",
+          "label": "Loan Amount Required (₹)",
+          "label_hi": "आवश्यक ऋण राशि (₹)",
+          "label_te": "అవసరమైన రుణ మొత్తం (₹)",
+          "type": "number",
+          "required": true,
+          "validation": {"min": 5000, "max": 2000000}
+        },
+        {
+          "id": "existing_bank_account",
+          "label": "Existing Bank Account Number",
+          "label_hi": "मौजूदा बैंक खाता नंबर",
+          "label_te": "ఇప్పటికే ఉన్న బ్యాంక్ ఖాతా నంబర్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "annual_turnover",
+          "label": "Annual Business Turnover (₹)",
+          "label_hi": "वार्षिक व्यवसाय टर्नओवर (₹)",
+          "label_te": "వార్షిక వ్యాపార టర్నోవర్ (₹)",
+          "type": "number",
+          "required": false,
+          "placeholder": "For existing businesses"
+        },
+        {
+          "id": "preferred_lender",
+          "label": "Preferred Lender",
+          "label_hi": "पसंदीदा ऋणदाता",
+          "label_te": "ఇష్టపడే రుణదాత",
+          "type": "select",
+          "required": false,
+          "options": ["Any Bank", "State Bank of India", "Bank of Baroda", "Punjab National Bank", "Canara Bank", "HDFC Bank", "ICICI Bank", "Microfinance Institution"]
+        }
+      ],
+
+      "required_documents": [
+        {
+          "id": "aadhaar_doc",
+          "label": "Aadhaar Card / PAN Card",
+          "label_hi": "आधार कार्ड / पैन कार्ड",
+          "label_te": "ఆధార్ కార్డు / PAN కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "address_proof",
+          "label": "Address Proof",
+          "label_hi": "पता प्रमाण",
+          "label_te": "చిరునామా రుజువు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "business_proof",
+          "label": "Business Proof / License",
+          "label_hi": "व्यवसाय प्रमाण / लाइसेंस",
+          "label_te": "వ్యాపార రుజువు / లైసెన్స్",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": false
+        },
+        {
+          "id": "photo",
+          "label": "Passport Size Photo",
+          "label_hi": "पासपोर्ट साइज फोटो",
+          "label_te": "పాస్‌పోర్ట్ సైజ్ ఫోటో",
+          "type": "file",
+          "accept": ".jpg,.jpeg,.png",
+          "required": true
+        }
+      ]
+    },
+
+    "PMSVANIDHI": {
+      "scheme_id": "PMSVANIDHI",
+      "scheme_name": "PM Street Vendor's AtmaNirbhar Nidhi",
+      "short_description": "₹10,000 working capital loan for street vendors",
+      "category": "street_vendor_credit",
+      "icon": "🛵",
+      "detailed_description": "Provides working capital loans to street vendors to support their economic activity and help them become economically self-sufficient.",
+      "who_can_apply": "Street vendors with identity proof engaged in vending activities like food, clothing, handicrafts, books, and who don't have access to formal credit",
+      "key_benefits": [
+        "💳 ₹10,000 working capital loan with no collateral",
+        "💰 Interest subvention of 7% annually for 12 months",
+        "⏰ 12-month repayment period starting after 3 months grace period",
+        "📱 Digital transaction incentive of ₹100 per month",
+        "✅ Pathway to formal banking and credit history"
+      ],
+      "not_eligible": "Non-vendors, individuals with income above specified limits, those not engaged in vending as primary activity",
+
+      "eligibility_questions": [
+        {
+          "id": "eq_svanidhi_1",
+          "question": "Are you a street vendor (selling goods/services in streets, footpaths, or public places)?",
+          "question_hi": "क्या आप स्ट्रीट वेंडर हैं (सड़कों, फुटपाथों या सार्वजनिक स्थानों पर सामान/सेवाएं बेचते हैं)?",
+          "question_te": "మీరు స్ట్రీట్ వెండర్ (వీధులు, ఫుట్‌పాత్‌లు లేదా పబ్లిక్ ప్లేస్‌లలో వస్తువులు/సేవలు అమ్ముతున్నారా)?",
+          "field_key": "is_street_vendor",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PM SVANidhi is only for street vendors."
+        },
+        {
+          "id": "eq_svanidhi_2",
+          "question": "Do you vend in an urban area (city/town)?",
+          "question_hi": "क्या आप शहरी क्षेत्र (शहर/कस्बा) में वेंडिंग करते हैं?",
+          "question_te": "మీరు పట్టణ ప్రాంతంలో (నగరం/పట్టణం) వెండింగ్ చేస్తున్నారా?",
+          "field_key": "is_urban_vendor",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PM SVANidhi is for urban street vendors only."
+        },
+        {
+          "id": "eq_svanidhi_3",
+          "question": "Do you have a Certificate of Vending, ULB ID Card, or Survey Reference Number?",
+          "question_hi": "क्या आपके पास वेंडिंग प्रमाणपत्र, ULB ID कार्ड या सर्वे रेफरेंस नंबर है?",
+          "question_te": "మీకు వెండింగ్ సర్టిఫికేట్, ULB ID కార్డ్, లేదా సర్వే రిఫరెన్స్ నంబర్ ఉందా?",
+          "field_key": "has_vendor_id",
+          "type": "boolean",
+          "required_answer": true,
+          "rejection_message": "PM SVANidhi requires vendor identification from ULB."
+        },
+        {
+          "id": "eq_svanidhi_4",
+          "question": "What type of vending business do you do?",
+          "question_hi": "आप किस प्रकार का वेंडिंग व्यवसाय करते हैं?",
+          "question_te": "మీరు ఏ రకమైన వెండింగ్ వ్యాపారం చేస్తున్నారు?",
+          "field_key": "vendor_category",
+          "type": "choice",
+          "options": ["Food/Snacks", "Fruits/Vegetables", "Clothes/Textiles", "General goods", "Street services (repair, cobbler)", "Other"],
+          "auto_fill": "vendor_category"
+        }
+      ],
+
+      "form_fields": [
+        {
+          "id": "full_name",
+          "label": "Full Name",
+          "label_hi": "पूरा नाम",
+          "label_te": "పూర్తి పేరు",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "mobile_number",
+          "label": "Mobile Number",
+          "label_hi": "मोबाइल नंबर",
+          "label_te": "మొబైల్ నంబర్",
+          "type": "phone",
+          "required": true
+        },
+        {
+          "id": "aadhaar_number",
+          "label": "Aadhaar Number",
+          "label_hi": "आधार नंबर",
+          "label_te": "ఆధార్ నంబర్",
+          "type": "aadhaar",
+          "required": true,
+          "validation": {"pattern": "^[0-9]{12}$"}
+        },
+        {
+          "id": "vendor_category",
+          "label": "Vendor Category",
+          "label_hi": "वेंडर श्रेणी",
+          "label_te": "వెండర్ వర్గం",
+          "type": "select",
+          "required": true,
+          "options": ["Food/Snacks", "Fruits/Vegetables", "Clothes/Textiles", "General goods", "Street services", "Other"],
+          "auto_fill_from": "eq_svanidhi_4"
+        },
+        {
+          "id": "survey_reference_number",
+          "label": "Survey Reference Number / CoV Number",
+          "label_hi": "सर्वे रेफरेंस नंबर / CoV नंबर",
+          "label_te": "సర్వే రిఫరెన్స్ నంబర్ / CoV నంబర్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "ulb_name",
+          "label": "Urban Local Body (Municipality/Corporation) Name",
+          "label_hi": "शहरी स्थानीय निकाय (नगरपालिका/निगम) का नाम",
+          "label_te": "అర్బన్ లోకల్ బాడీ (మున్సిపాలిటీ/కార్పొరేషన్) పేరు",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "business_location",
+          "label": "Vending Location/Market",
+          "label_hi": "वेंडिंग स्थान/बाजार",
+          "label_te": "వెండింగ్ లొకేషన్/మార్కెట్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "bank_account_number",
+          "label": "Bank Account Number",
+          "label_hi": "बैंक खाता नंबर",
+          "label_te": "బ్యాంక్ ఖాతా నంబర్",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "ifsc_code",
+          "label": "IFSC Code",
+          "label_hi": "IFSC कोड",
+          "label_te": "IFSC కోడ్",
+          "type": "text",
+          "required": true
+        }
+      ],
+
+      "required_documents": [
+        {
+          "id": "vendor_certificate",
+          "label": "Certificate of Vending / ULB ID Card",
+          "label_hi": "वेंडिंग प्रमाणपत्र / ULB ID कार्ड",
+          "label_te": "వెండింగ్ సర్టిఫికేట్ / ULB ID కార్డ్",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "aadhaar_doc",
+          "label": "Aadhaar Card",
+          "label_hi": "आधार कार्ड",
+          "label_te": "ఆధార్ కార్డు",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "bank_passbook",
+          "label": "Bank Passbook First Page",
+          "label_hi": "बैंक पासबुक का पहला पेज",
+          "label_te": "బ్యాంక్ పాస్ బుక్ మొదటి పేజీ",
+          "type": "file",
+          "accept": ".pdf,.jpg,.jpeg,.png",
+          "required": true
+        },
+        {
+          "id": "photo",
+          "label": "Passport Size Photo",
+          "label_hi": "पासपोर्ट साइज फोटो",
+          "label_te": "పాస్‌పోర్ట్ సైజ్ ఫోటో",
+          "type": "file",
+          "accept": ".jpg,.jpeg,.png",
+          "required": true
+        }
+      ]
+    }
+  },
+
+  "intent_keywords": {
+    "PMKISAN": ["pm kisan", "kisan samman", "farmer", "किसान", "రైతు", "6000", "farming support", "agriculture income"],
+    "PMJAY": ["ayushman", "health", "hospital", "medical", "insurance", "स्वास्थ्य", "ఆరోగ్యం", "5 lakh", "pmjay"],
+    "PMAYU": ["awas", "house", "housing", "home", "घर", "ఇల్లు", "pmay", "construction", "ews", "lig"],
+    "KCC": ["kisan credit", "kcc", "farm loan", "agricultural credit", "किसान क्रेडिट", "రైతు క్రెడిట్"],
+    "APY": ["atal pension", "pension", "retirement", "old age", "पेंशन", "పెన్షన్", "apy"],
+    "PMFBY": ["fasal bima", "crop insurance", "bima", "फसल बीमा", "పంట బీమా", "pmfby"],
+    "PMMY": ["mudra", "business loan", "micro loan", "entrepreneur", "मुद्रा", "shishu", "kishore", "tarun"],
+    "PMSVANIDHI": ["svanidhi", "street vendor", "vendor loan", "hawker", "स्ट्रीट वेंडर", "వీధి వ్యాపారి"]
+  },
+
+  "conversation_templates": {
+    "greeting": {
+      "en": "🙏 Namaste! I'm Jan Sahayak, your government schemes companion.\n\nI help farmers, families, and entrepreneurs understand and apply for government schemes that can bring real change to your life.\n\nI can assist with:\n🌾 PM-KISAN (₹6,000/year for farmers)\n🏥 Ayushman Bharat (₹5L health coverage)\n🏠 PM Awas Yojana (Housing for families)\n💳 Kisan Credit Card (Farm loans)\n👴 APY (Pension for retirement)\n🌱 PMFBY (Crop insurance)\n💼 MUDRA (Business loans)\n🛒 PM SVANidhi (Street vendor loans)\n\nWhat would you like to know about? Just ask! 😊",
+      "hi": "🙏 नमस्ते! मैं जन सहायक हूं, आपकी सरकारी योजनाओं की साथी।\n\nमैं किसानों, परिवारों और उद्यमियों को सरकारी योजनाओं को समझने और उनके लिए आवेदन करने में मदद करती हूं।\n\nमैं इनमें मदद कर सकती हूं:\n🌾 PM-KISAN (किसानों के लिए ₹6,000/साल)\n🏥 आयुष्मान भारत (₹5L स्वास्थ्य कवरेज)\n🏠 PM आवास योजना (परिवारों के लिए आवास)\n💳 किसान क्रेडिट कार्ड (खेती के लिए ऋण)\n👴 APY (सेवानिवृत्ति पेंशन)\n🌱 PMFBY (फसल बीमा)\n💼 MUDRA (व्यापार ऋण)\n🛒 PM SVANidhi (स्ट्रीट विक्रेता ऋण)\n\nक्या जानना चाहते हैं? बस पूछें! 😊",
+      "te": "🙏 నమస్కారం! నేను జన సహాయక్, మీ ప్రభుత్వ పథకాల సహచరి.\n\nరైతులు, కుటుంబాలు మరియు వ్యవసాయవేత్తలకు ప్రభుత్వ పథకాలను అర్థం చేసుకోవడానికి మరియు చేరుకోవడానికి సహాయం చేస్తాను.\n\nనేను ఈ విషయాలకు సహాయం చేయగలను:\n🌾 PM-KISAN (రైతుల కోసం ₹6,000/సంవత్సరం)\n🏥 ఆయుష్మాన్ భారత (₹5L ఆరోగ్య కవరేజ్)\n🏠 PM ఆవాస్ యోజన (కుటుంబాల కోసం గృహం)\n💳 కిసాన్ క్రెడిట్ కార్డ్ (వ్యవసాయ రుణాలు)\n👴 APY (పదవీ విరమణ పెన్షన్)\n🌱 PMFBY (పంట బీమా)\n💼 MUDRA (వ్యాపార రుణాలు)\n🛒 PM SVANidhi (వీధి విక్రేతల రుణాలు)\n\nఏమి తెలుసుకోవాలనుకుంటున్నారు? కేవలం అడగండి! 😊"
+    },
+    "eligibility_start": {
+      "en": "Great! Let me check your eligibility for {scheme_name}. I'll ask you a few questions one by one.",
+      "hi": "{scheme_name} के लिए आपकी पात्रता जांचने दीजिए। मैं आपसे एक-एक करके कुछ सवाल पूछूंगी।",
+      "te": "{scheme_name} కోసం మీ అర్హతను తనిఖీ చేద్దాం. నేను మీకు ఒక్కొక్క ప్రశ్న అడుగుతాను."
+    },
+    "eligible_proceed": {
+      "en": "Congratulations! Based on your answers, you appear to be eligible for {scheme_name}. Would you like to proceed with the application? I'll help you fill in the required details.",
+      "hi": "बधाई हो! आपके जवाबों के आधार पर, आप {scheme_name} के लिए पात्र लगते हैं। क्या आप आवेदन के साथ आगे बढ़ना चाहेंगे?",
+      "te": "అభినందనలు! మీ జవాబుల ఆధారంగా, మీరు {scheme_name} కు అర్హత కలిగి ఉన్నారు. దరఖాస్తుతో ముందుకు వెళ్ళాలనుకుంటున్నారా?"
+    },
+    "not_eligible": {
+      "en": "I'm sorry, but based on your response, you may not be eligible for {scheme_name}. {reason} Would you like me to suggest other schemes that might suit you?",
+      "hi": "मुझे खेद है, लेकिन आपके जवाब के आधार पर, आप {scheme_name} के लिए पात्र नहीं हो सकते। {reason} क्या आप चाहेंगे कि मैं अन्य योजनाएं सुझाऊं?",
+      "te": "క్షమించండి, మీ జవాబు ఆధారంగా, మీరు {scheme_name} కు అర్హత పొందకపోవచ్చు। {reason} మీకు సరిపోయే ఇతర పథకాలను సూచించమంటారా?"
+    },
+    "form_start": {
+      "en": "Let's fill in your application details. I'll guide you through each field. Some information from your eligibility check will be auto-filled.",
+      "hi": "आइए आपके आवेदन विवरण भरें। मैं आपको हर फ़ील्ड में मार्गदर्शन करूंगी।",
+      "te": "మీ దరఖాస్తు వివరాలను నింపుదాం. నేనుప్రతి ఫీల్డ్‌లో మీకు మార్గదర్శకత్వం చేస్తాను."
+    },
+    "document_upload": {
+      "en": "Now I need you to upload the required documents. Please upload: {document_name}",
+      "hi": "अब मुझे आवश्यक दस्तावेज़ अपलोड करने होंगे। कृपया अपलोड करें: {document_name}",
+      "te": "ఇప్పుడు అవసరమైన పత్రాలను అప్‌లోడ్ చేయండి. దయచేసి అప్‌లోడ్ చేయండి: {document_name}"
+    },
+    "submission_complete": {
+      "en": "Your application for {scheme_name} has been submitted successfully! Your application reference number is: {ref_number}. You can track your application status using this number.",
+      "hi": "{scheme_name} के लिए आपका आवेदन सफलतापूर्वक जमा हो गया है! आपका आवेदन संदर्भ नंबर है: {ref_number}",
+      "te": "{scheme_name} కోసం మీ దరఖాస్తు విజయవంతంగా సమర్పించబడింది! మీ దరఖాస్తు రిఫరెన్స్ నంబర్: {ref_number}"
+    }
+  }
+}

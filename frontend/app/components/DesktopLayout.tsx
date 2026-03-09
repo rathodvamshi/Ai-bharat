@@ -308,10 +308,8 @@ export default function DesktopLayout({
                                     {tab === "profile" && (
                                         <div className="mx-auto px-4 lg:px-6 pt-4 lg:pt-6" style={{ maxWidth: 1000 }}>
                                             <ProfileScreen
-                                                phone={phone}
                                                 lang={lang}
                                                 onLangChange={setLang}
-                                                onLogout={onLogout}
                                             />
                                         </div>
                                     )}

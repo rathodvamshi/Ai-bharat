@@ -39,7 +39,7 @@ function BottomNav() {
             {isMic ? (
               // Floating mic button
               <div
-                className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-lg -mt-6
+                className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-lg -mt-8 overflow-hidden
                   ${isActive ? "mic-listening" : "mic-idle"}`}
                 style={{
                   background: isActive
@@ -47,10 +47,10 @@ function BottomNav() {
                     : "linear-gradient(135deg,#2E7D32,#43A047)",
                   boxShadow: isActive
                     ? "0 4px 20px rgba(198,40,40,0.4)"
-                    : "0 4px 20px rgba(46,125,50,0.4)",
+                    : "0 4px 20px rgba(46,50,50,0.25)",
                 }}
               >
-                {item.icon}
+                <img src="/live_chatbot.gif" alt="Didi" className="w-[110%] h-[110%] object-cover p-1" />
               </div>
             ) : (
               <>
@@ -101,7 +101,7 @@ function AppHeader() {
         <div className="w-9 h-9 bg-gradient-to-br from-green-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-green-100">
           {
             currentTab === "schemes" ? <span className="text-xl">🏛️</span> :
-              currentTab === "voice" ? <Bot className="w-5 h-5 text-white" /> :
+              currentTab === "voice" ? <img src="/live_chatbot.gif" alt="Didi" className="w-full h-full object-cover rounded-xl" /> :
                 currentTab === "history" ? <span className="text-xl">📋</span> : <span className="text-xl">👤</span>
           }
         </div>
@@ -152,7 +152,13 @@ function SidebarNav({ collapsed }: { collapsed: boolean }) {
               ].join(" ")}
               style={{ justifyContent: collapsed ? "center" : "flex-start", marginTop: 8 }}
             >
-              <span className="desktop-nav-icon">{item.icon}</span>
+              <span className="desktop-nav-icon">
+                {item.id === "voice" ? (
+                  <img src="/live_chatbot.gif" alt="Didi" className="w-full h-full object-cover rounded-lg scale-110" />
+                ) : (
+                  item.icon
+                )}
+              </span>
 
               <AnimatePresence initial={false}>
                 {!collapsed && (
@@ -282,7 +288,7 @@ function DesktopLayoutWrapper({ children }: { children: ReactNode }) {
               {
                 currentTab === "home" ? <span className="text-xl">🏠</span> :
                   currentTab === "schemes" ? <span className="text-xl">🏛️</span> :
-                    currentTab === "voice" ? <Bot className="w-6 h-6 text-white" /> :
+                    currentTab === "voice" ? <img src="/live_chatbot.gif" alt="Didi" className="w-full h-full object-cover rounded-xl" /> :
                       currentTab === "history" ? <span className="text-xl">📋</span> : <span className="text-xl">👤</span>
               }
             </div>

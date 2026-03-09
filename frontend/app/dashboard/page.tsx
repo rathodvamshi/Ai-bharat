@@ -347,7 +347,7 @@ const getFeatures = (lang: LanguageCode) => [
   { icon: HelpCircle, title: translations[lang].feature4Title, titleEn: translations[lang].feature4TitleEn, desc: translations[lang].feature4Desc },
 ];
 
-const BACKEND_URL = "http://localhost:8000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>("idle");

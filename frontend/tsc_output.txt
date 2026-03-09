@@ -1,0 +1,105 @@
+app/components/HistoryScreen.tsx(2,8): error TS1259: Module '"C:/Users/vamsh/Source/Projects/aws/AWS_Hackathon/frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+app/components/HistoryScreen.tsx(36,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(37,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(38,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(43,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(44,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(45,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(46,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(51,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(52,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(57,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(58,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(59,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(64,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(65,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(66,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(67,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(72,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(73,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(74,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(91,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(99,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(107,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(108,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(109,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(110,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(113,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(115,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(119,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(125,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(127,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(128,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(131,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(133,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(134,37): error TS2322: Type '{ key: string; label: string; value: string; }' is not assignable to type '{ label: string; value: string; }'.
+  Property 'key' does not exist on type '{ label: string; value: string; }'.
+app/components/HistoryScreen.tsx(150,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(151,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(152,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(378,68): error TS2551: Property 'applicantNameHi' does not exist on type 'HistoryItem'. Did you mean 'applicantName'?
+app/components/HistoryScreen.tsx(382,68): error TS2339: Property 'fatherNameHi' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(382,88): error TS2339: Property 'fatherName' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(386,52): error TS2339: Property 'aadhar' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(390,52): error TS2339: Property 'mobile' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(400,68): error TS2339: Property 'villageHi' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(400,85): error TS2339: Property 'village' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(404,68): error TS2339: Property 'districtHi' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(404,86): error TS2339: Property 'district' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(408,68): error TS2339: Property 'stateHi' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(408,83): error TS2339: Property 'state' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(413,20): error TS2339: Property 'bankName' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(419,52): error TS2339: Property 'bankName' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(423,52): error TS2339: Property 'accountNo' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(427,52): error TS2339: Property 'ifsc' does not exist on type 'HistoryItem'.
+app/components/HistoryScreen.tsx(561,9): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(563,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(564,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(569,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(570,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(572,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(573,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(574,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(584,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(586,17): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(592,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(594,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(595,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(602,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(604,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(605,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(606,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(609,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(610,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(611,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(613,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(614,25): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(623,29): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(630,33): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(631,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(632,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(635,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(638,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(640,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(641,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(644,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(652,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(653,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(662,45): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(665,41): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(673,45): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(680,37): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(682,45): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(687,49): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(690,49): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(691,53): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(698,53): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(707,45): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(708,49): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(717,53): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(720,49): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(729,53): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(732,49): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(741,53): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(755,13): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+app/components/HistoryScreen.tsx(757,21): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
